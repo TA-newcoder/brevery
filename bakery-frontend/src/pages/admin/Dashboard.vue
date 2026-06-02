@@ -2,15 +2,15 @@
   <div>
     <!-- KPI GRID -->
     <div class="kpi-grid mb-4">
-      <div class="kpi-card" v-for="(kpi, i) in kpis" :key="i">
+      <div class="kpi-card" v-for="(kpi, i) in kpis" :key="i" :style="{ '--kpi-accent': kpi.color }">
         <div class="d-flex justify-content-between align-items-start mb-3">
           <span class="text-sub fw-semibold" style="font-size: 0.95rem">{{ kpi.label }}</span>
-          <div class="kpi-icon-wrap">
+          <div class="kpi-icon-wrap" :style="{ background: kpi.bg, color: kpi.color }">
             <component :is="kpi.icon" size="24" weight="bold" />
           </div>
         </div>
         <h3 class="fw-bold mb-1" style="color: var(--text-main)">{{ kpi.value }}</h3>
-        <div class="small fw-semibold mt-2" style="color: var(--primary)">{{ kpi.trend }}</div>
+        <div class="small fw-semibold mt-2 d-inline-flex align-items-center gap-1" :style="{ color: kpi.color }">{{ kpi.trend }}</div>
       </div>
     </div>
 
@@ -142,16 +142,16 @@ const periods = [
 function formatPrice(p) { return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(p || 0) }
 
 const kpis = computed(() => [
-  { label: 'Tổng doanh thu', value: formatPrice(summary.value.totalRevenue), icon: PhMoney, trend: 'Đang cập nhật' },
-  { label: 'Đơn chờ xử lý', value: summary.value.pendingOrders || 0, icon: PhClipboardText, trend: 'Cần chú ý' },
-  { label: 'Tổng khách hàng', value: summary.value.totalCustomers || 0, icon: PhUsers, trend: 'Khách hàng' },
-  { label: 'Tổng sản phẩm', value: summary.value.totalProducts || 0, icon: PhPackage, trend: 'Trong kho' },
+  { label: 'Tổng doanh thu', value: formatPrice(summary.value.totalRevenue), icon: PhMoney, trend: 'Đang cập nhật', color: '#4A9B5C', bg: 'var(--accent-sage)' },
+  { label: 'Đơn chờ xử lý', value: summary.value.pendingOrders || 0, icon: PhClipboardText, trend: 'Cần chú ý', color: '#B9851F', bg: 'var(--accent-honey)' },
+  { label: 'Tổng khách hàng', value: summary.value.totalCustomers || 0, icon: PhUsers, trend: 'Khách hàng', color: '#7B6CC8', bg: 'var(--accent-plum)' },
+  { label: 'Tổng sản phẩm', value: summary.value.totalProducts || 0, icon: PhPackage, trend: 'Trong kho', color: 'var(--primary)', bg: 'var(--primary-light)' },
 ])
 
 const insightList = computed(() => {
   if (!insight.value) return []
   return insight.value.split('\n').filter(line => line.trim().length > 3).map(line => {
-    let cleanLine = line.replace(/^[\*\-\d\.]+\s*/, '').trim();
+    let cleanLine = line.replace(/^[*\-\d.]+\s*/, '').trim();
     let type = 'info';
     let icon = PhInfo;
     let color = '#7B6CC8'; // Purple
@@ -262,8 +262,9 @@ onUnmounted(() => { clearInterval(refreshTimer); if (chartInstance) chartInstanc
 
 <style scoped>
 .kpi-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 24px; }
-.kpi-card { background: var(--bg-surface); border-radius: var(--radius-card); box-shadow: var(--shadow-soft); padding: 24px; transition: transform 0.2s; }
-.kpi-card:hover { transform: translateY(-2px); }
+.kpi-card { position: relative; background: var(--bg-surface); border-radius: var(--radius-card); box-shadow: var(--shadow-soft); padding: 24px; overflow: hidden; transition: transform 0.2s, box-shadow 0.2s; }
+.kpi-card::before { content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 4px; background: var(--kpi-accent, var(--primary)); opacity: 0.9; }
+.kpi-card:hover { transform: translateY(-3px); box-shadow: var(--shadow-hover); }
 .kpi-icon-wrap { width: 48px; height: 48px; border-radius: 50%; background: var(--primary-light); display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0; line-height: 1; }
 
 .widget-grid { display: grid; grid-template-columns: 2fr 1fr; gap: 24px; }
