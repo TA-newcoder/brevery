@@ -1,0 +1,185 @@
+@import './variables.css';
+
+/* ==================== GLOBAL ==================== */
+* { box-sizing: border-box; }
+body {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  background: var(--bakery-bg);
+  color: var(--bakery-text);
+  margin: 0;
+  -webkit-font-smoothing: antialiased;
+}
+a { text-decoration: none; color: inherit; }
+
+/* ==================== BAKERY CARD ==================== */
+.bakery-card {
+  background: #FFFFFF;
+  border-radius: var(--radius-card);
+  box-shadow: var(--shadow-card);
+  border: none;
+  padding: 20px 24px;
+  transition: box-shadow .2s ease, transform .2s ease;
+}
+.bakery-card:hover {
+  box-shadow: var(--shadow-hover);
+  transform: translateY(-2px);
+}
+
+/* ==================== COLOR CARDS ==================== */
+.card-caramel  { background: var(--bakery-primary-light); }
+.card-pink     { background: var(--bakery-accent-light);  }
+.card-purple   { background: var(--bakery-purple-light);  }
+.card-green    { background: var(--bakery-green-light);   }
+
+/* ==================== BUTTONS ==================== */
+.btn-bakery {
+  background: var(--bakery-primary);
+  color: #fff;
+  border-radius: var(--radius-btn);
+  border: none;
+  padding: 10px 24px;
+  font-weight: 500;
+  transition: opacity .15s, transform .1s;
+  cursor: pointer;
+}
+.btn-bakery:hover { opacity: .88; color: #fff; transform: translateY(-1px); }
+.btn-bakery:active { transform: translateY(0); }
+
+.btn-bakery-outline {
+  background: transparent;
+  color: var(--bakery-primary);
+  border: 1.5px solid var(--bakery-primary);
+  border-radius: var(--radius-btn);
+  padding: 10px 24px;
+  font-weight: 500;
+  transition: all .15s;
+  cursor: pointer;
+}
+.btn-bakery-outline:hover {
+  background: var(--bakery-primary);
+  color: #fff;
+}
+
+/* ==================== BADGES ==================== */
+.badge-caramel { background: var(--bakery-primary-light); color: var(--bakery-primary); border-radius: var(--radius-badge); padding: 4px 12px; font-size: 0.8rem; font-weight: 500; }
+.badge-pink    { background: var(--bakery-accent-light);  color: #C2616A; border-radius: var(--radius-badge); padding: 4px 12px; font-size: 0.8rem; font-weight: 500; }
+.badge-purple  { background: var(--bakery-purple-light);  color: #7B6CC8; border-radius: var(--radius-badge); padding: 4px 12px; font-size: 0.8rem; font-weight: 500; }
+.badge-green   { background: var(--bakery-green-light);   color: #4A9B5C; border-radius: var(--radius-badge); padding: 4px 12px; font-size: 0.8rem; font-weight: 500; }
+
+/* ==================== INPUT ==================== */
+.bakery-input {
+  border: 1.5px solid #EAE0DA;
+  border-radius: var(--radius-input);
+  padding: 10px 16px;
+  background: #FDFAF8;
+  color: var(--bakery-text);
+  transition: border-color .15s;
+  width: 100%;
+  font-size: 0.95rem;
+}
+.bakery-input:focus {
+  border-color: var(--bakery-primary);
+  outline: none;
+  background: #fff;
+  box-shadow: 0 0 0 3px rgba(212, 135, 90, 0.1);
+}
+
+/* ==================== ADMIN SIDEBAR ==================== */
+.admin-sidebar {
+  background: var(--bakery-primary);
+  border-radius: 0 24px 24px 0;
+  width: 72px;
+  transition: width .3s ease;
+  min-height: 100vh;
+  position: fixed;
+  left: 0; top: 0;
+  z-index: 1000;
+  display: flex;
+  flex-direction: column;
+  padding: 20px 0;
+}
+.admin-sidebar.expanded { width: 240px; }
+.sidebar-item {
+  display: flex; align-items: center; gap: 12px;
+  padding: 12px 20px;
+  color: rgba(255,255,255,.7);
+  cursor: pointer;
+  transition: all .15s;
+  border-radius: 14px;
+  margin: 2px 8px;
+  white-space: nowrap;
+  overflow: hidden;
+}
+.sidebar-item:hover { color: #fff; background: rgba(255,255,255,.12); }
+.sidebar-item.active {
+  background: rgba(255,255,255,.2);
+  color: #fff;
+  font-weight: 600;
+}
+.sidebar-item .icon { min-width: 24px; text-align: center; font-size: 1.2rem; }
+
+/* ==================== ANIMATIONS ==================== */
+.fade-enter-active, .fade-leave-active { transition: opacity .2s ease; }
+.fade-enter-from, .fade-leave-to { opacity: 0; }
+
+.slide-up-enter-active { transition: all .3s ease; }
+.slide-up-enter-from { transform: translateY(20px); opacity: 0; }
+
+.slide-in-enter-active { animation: slideIn .4s ease; }
+@keyframes slideIn {
+  from { transform: translateX(100%); opacity: 0; }
+  to { transform: translateX(0); opacity: 1; }
+}
+
+/* ==================== PAGINATION ==================== */
+.bakery-pagination .page-link {
+  border: none;
+  border-radius: var(--radius-btn);
+  color: var(--bakery-text-sub);
+  padding: 8px 14px;
+  margin: 0 2px;
+  transition: all .15s;
+}
+.bakery-pagination .page-link:hover {
+  background: var(--bakery-primary-light);
+  color: var(--bakery-primary);
+}
+.bakery-pagination .page-item.active .page-link {
+  background: var(--bakery-primary);
+  color: #fff;
+}
+
+/* ==================== TOAST OVERRIDE ==================== */
+.Toastify__toast { border-radius: var(--radius-card) !important; }
+
+/* ==================== SCROLLBAR ==================== */
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: #d4c5ba; border-radius: 10px; }
+::-webkit-scrollbar-thumb:hover { background: var(--bakery-primary); }
+
+/* ==================== UTILS ==================== */
+.text-bakery { color: var(--bakery-primary) !important; }
+.bg-bakery { background: var(--bakery-primary) !important; }
+.bg-bakery-light { background: var(--bakery-primary-light) !important; }
+.text-sub { color: var(--bakery-text-sub) !important; }
+.rounded-bakery { border-radius: var(--radius-card) !important; }
+
+/* Product card image */
+.product-card-img {
+  height: 200px;
+  object-fit: cover;
+  border-radius: var(--radius-card) var(--radius-card) 0 0;
+}
+
+/* Loading skeleton */
+.skeleton {
+  background: linear-gradient(90deg, #f0e8e0 25%, #f8f0e8 50%, #f0e8e0 75%);
+  background-size: 200% 100%;
+  animation: skeleton-loading 1.5s infinite;
+  border-radius: var(--radius-btn);
+}
+@keyframes skeleton-loading {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
