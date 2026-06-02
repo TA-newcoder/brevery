@@ -54,7 +54,7 @@ const router = createRouter({
 })
 
 // ===== NAVIGATION GUARDS =====
-router.beforeEach(async (to, from) => {
+router.beforeEach(async (to) => {
   const authStore = useAuthStore()
 
   // Restore session on first load

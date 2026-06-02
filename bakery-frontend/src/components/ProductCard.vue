@@ -13,7 +13,7 @@
 
     <!-- TOP RIGHT HEART -->
     <div class="position-absolute z-2" style="top: 20px; right: 20px;">
-      <button class="btn btn-light rounded-circle p-1 shadow-sm border-0 heart-btn" @click.stop="toggleHeart">
+      <button class="btn btn-light rounded-circle p-1 shadow-sm border-0 heart-btn" :class="{ 'heart-pop': heartPop }" @click.stop="toggleHeart" :title="isLiked ? 'Bỏ yêu thích' : 'Thêm vào yêu thích'" :aria-pressed="isLiked">
         <PhHeart :weight="isLiked ? 'fill' : 'regular'" color="#C8502A" size="20" />
       </button>
     </div>
@@ -65,15 +65,29 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, onMounted } from 'vue'
 import { PhStar, PhHeart, PhEye, PhShoppingCart, PhCheckCircle, PhTrendUp, PhSparkle } from '@phosphor-icons/vue'
 import { useCartStore } from '@/stores/cart.store'
+import { toast } from 'vue3-toastify'
 
 const props = defineProps({ product: { type: Object, required: true } })
 
 const cartStore = useCartStore()
 const isLiked = ref(false)
+const heartPop = ref(false)
 const showCheckmark = ref(false)
+
+const WISHLIST_KEY = 'brevery-wishlist'
+function readWishlist() {
+  try { return JSON.parse(localStorage.getItem(WISHLIST_KEY)) || [] } catch { return [] }
+}
+function writeWishlist(ids) {
+  localStorage.setItem(WISHLIST_KEY, JSON.stringify(ids))
+}
+
+onMounted(() => {
+  isLiked.value = readWishlist().includes(props.product.productId)
+})
 
 function formatPrice(p) { 
   return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(p || 0) 
@@ -81,6 +95,19 @@ function formatPrice(p) {
 
 function toggleHeart() {
   isLiked.value = !isLiked.value
+  const ids = readWishlist()
+  const id = props.product.productId
+  if (isLiked.value) {
+    if (!ids.includes(id)) ids.push(id)
+    heartPop.value = true
+    setTimeout(() => { heartPop.value = false }, 350)
+    toast.success('Đã thêm vào yêu thích ❤️')
+  } else {
+    writeWishlist(ids.filter(x => x !== id))
+    toast.info('Đã bỏ khỏi yêu thích')
+    return
+  }
+  writeWishlist(ids)
 }
 
 async function handleAddToCart() {

@@ -1,6 +1,8 @@
 <template>
   <div class="home-page">
-    
+    <!-- Scroll progress bar -->
+    <div class="scroll-progress" :style="{ width: scrollProgress + '%' }"></div>
+
     <!-- 2. HERO SECTION (2 Cột) -->
     <section class="hero-section position-relative overflow-hidden">
       <!-- Decorative background blobs -->
@@ -84,6 +86,31 @@
               </div>
             </div>
           </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 2b. STATS COUNTER STRIP -->
+    <section class="container py-4 reveal-on-scroll">
+      <div ref="statStrip" class="stat-strip d-flex flex-wrap align-items-center justify-content-around text-center px-3 py-4">
+        <div class="stat-item px-3 py-2">
+          <div class="stat-value">{{ stats.years }}+</div>
+          <div class="stat-label">Năm kinh nghiệm</div>
+        </div>
+        <div class="stat-divider d-none d-md-block"></div>
+        <div class="stat-item px-3 py-2">
+          <div class="stat-value">{{ stats.customers.toLocaleString('vi-VN') }}+</div>
+          <div class="stat-label">Khách hàng hài lòng</div>
+        </div>
+        <div class="stat-divider d-none d-md-block"></div>
+        <div class="stat-item px-3 py-2">
+          <div class="stat-value">{{ stats.menu }}+</div>
+          <div class="stat-label">Món trong thực đơn</div>
+        </div>
+        <div class="stat-divider d-none d-md-block"></div>
+        <div class="stat-item px-3 py-2">
+          <div class="stat-value">{{ stats.minutes }}'</div>
+          <div class="stat-label">Phút giao trung bình</div>
         </div>
       </div>
     </section>
@@ -312,6 +339,27 @@
       </div>
     </section>
 
+    <!-- 9. FAQ -->
+    <section class="container py-5 py-lg-6 reveal-on-scroll">
+      <div class="text-center mb-5">
+        <h2 class="section-title fw-bold">Câu hỏi thường gặp</h2>
+      </div>
+      <div class="mx-auto" style="max-width: 760px;">
+        <div v-for="(f, i) in faqs" :key="i" class="faq-item" :class="{ open: openFaq === i }">
+          <button class="faq-question" @click="toggleFaq(i)">
+            <span>{{ f.q }}</span>
+            <PhCaretDown class="faq-chevron" size="20" weight="bold" />
+          </button>
+          <div class="faq-answer"><p class="mb-0 pt-1">{{ f.a }}</p></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Back to top -->
+    <button class="back-to-top" :class="{ show: showBackToTop }" @click="scrollToTop" aria-label="Lên đầu trang" title="Lên đầu trang">
+      <PhArrowUp size="22" weight="bold" />
+    </button>
+
   </div>
 </template>
 
@@ -322,8 +370,55 @@ import ProductCard from '@/components/ProductCard.vue'
 import { 
   PhStorefront, PhShoppingCart, PhList, PhClock, PhLeaf, PhShieldCheck, 
   PhFire, PhCake, PhCookie, PhCoffee, PhSparkle, PhMapPin, PhMoped, 
-  PhStar, PhRocket, PhHeart, PhInstagramLogo, PhBag, PhBookOpen, PhCheckCircle, PhArrowRight
+  PhStar, PhRocket, PhHeart, PhInstagramLogo, PhBag, PhBookOpen, PhCheckCircle, PhArrowRight,
+  PhCaretDown, PhArrowUp
 } from '@phosphor-icons/vue'
+
+// --- Stats counter strip ---
+const statStrip = ref(null)
+const stats = ref({ years: 0, customers: 0, menu: 0, minutes: 0 })
+let statsAnimated = false
+function animateStats() {
+  if (statsAnimated) return
+  statsAnimated = true
+  const targets = { years: 12, customers: 50000, menu: 120, minutes: 30 }
+  const duration = 1600
+  const start = performance.now()
+  function tick(now) {
+    const p = Math.min((now - start) / duration, 1)
+    const ease = 1 - Math.pow(1 - p, 3)
+    stats.value = {
+      years: Math.round(targets.years * ease),
+      customers: Math.round(targets.customers * ease),
+      menu: Math.round(targets.menu * ease),
+      minutes: Math.round(targets.minutes * ease),
+    }
+    if (p < 1) requestAnimationFrame(tick)
+  }
+  requestAnimationFrame(tick)
+}
+
+// --- FAQ ---
+const openFaq = ref(0)
+function toggleFaq(i) { openFaq.value = openFaq.value === i ? -1 : i }
+const faqs = [
+  { q: 'Brevery giao hàng trong bao lâu?', a: 'Đơn nội thành thường được giao trong vòng 30 phút. Vào giờ cao điểm có thể lâu hơn một chút, nhưng chúng tôi luôn cập nhật trạng thái đơn theo thời gian thực.' },
+  { q: 'Tôi có thể đặt bánh sinh nhật theo yêu cầu không?', a: 'Có. Bạn có thể để lại ghi chú khi đặt hàng hoặc liên hệ trực tiếp; đội ngũ của chúng tôi sẽ tư vấn mẫu bánh, hương vị và thông điệp trên bánh.' },
+  { q: 'Nguyên liệu có tươi mỗi ngày không?', a: 'Tất cả bánh được làm mới mỗi sáng từ nguyên liệu chọn lọc. Chúng tôi không bán bánh tồn của ngày hôm trước.' },
+  { q: 'Chính sách hoàn tiền như thế nào?', a: 'Nếu bạn chưa hài lòng về chất lượng sản phẩm, chúng tôi hoàn tiền 100% hoặc đổi sản phẩm mới — không cần lý do phức tạp.' },
+]
+
+// --- Scroll progress + back-to-top ---
+const scrollProgress = ref(0)
+const showBackToTop = ref(false)
+function handleScroll() {
+  const h = document.documentElement
+  const scrolled = h.scrollTop
+  const height = h.scrollHeight - h.clientHeight
+  scrollProgress.value = height > 0 ? (scrolled / height) * 100 : 0
+  showBackToTop.value = scrolled > 500
+}
+function scrollToTop() { window.scrollTo({ top: 0, behavior: 'smooth' }) }
 
 // --- Hero Image Cycle Logic ---
 const heroImages = ['/images/cake.png', '/images/drink.png', '/images/banner.png']
@@ -404,10 +499,25 @@ onMounted(async () => {
   document.querySelectorAll('.reveal-on-scroll, .animate-fade-up').forEach((el) => {
     observer.observe(el)
   })
+
+  // Stats count-up when strip enters viewport
+  if (statStrip.value) {
+    const statObserver = new IntersectionObserver((entries, obs) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) { animateStats(); obs.disconnect() }
+      })
+    }, { threshold: 0.4 })
+    statObserver.observe(statStrip.value)
+  }
+
+  // Scroll progress + back-to-top
+  window.addEventListener('scroll', handleScroll, { passive: true })
+  handleScroll()
 })
 
 onUnmounted(() => {
   window.removeEventListener('resize', handleResize)
+  window.removeEventListener('scroll', handleScroll)
   clearInterval(slideInterval)
   if (observer) observer.disconnect()
 })

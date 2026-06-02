@@ -7,6 +7,20 @@
   --text-main:             #2C1E16;
   --text-sub:              #756B64;
 
+  /* Primary shades (derived from --primary, keeps base hue) */
+  --primary-dark:          #8B3210;
+  --primary-soft:          #FDF6EE;
+
+  /* Warm-harmonized accent tints (used by badges, status pills, auth gradients) */
+  --accent-rose:           #FBE4E4;
+  --accent-rose-text:      #C2616A;
+  --accent-plum:           #ECE7F7;
+  --accent-plum-text:      #7B6CC8;
+  --accent-sage:           #E3F0E4;
+  --accent-sage-text:      #4A9B5C;
+  --accent-honey:          #FBEFD6;
+  --accent-honey-text:     #B9851F;
+
   /* Aliases for backwards compatibility with existing components */
   --bakery-bg:             var(--bg-app);
   --bakery-surface:        var(--bg-surface);
@@ -14,6 +28,14 @@
   --bakery-primary-light:  var(--primary-light);
   --bakery-text:           var(--text-main);
   --bakery-text-sub:       var(--text-sub);
+  --bakery-accent-light:   var(--accent-rose);
+  --bakery-purple-light:   var(--accent-plum);
+  --bakery-green-light:    var(--accent-sage);
+
+  /* Gradients (within the warm palette) */
+  --gradient-primary:      linear-gradient(135deg, #D9683C 0%, #C85A32 55%, #8B3210 100%);
+  --gradient-warm:         linear-gradient(135deg, #FDF6EE 0%, #F4E2D8 100%);
+  --gradient-brand-text:   linear-gradient(90deg, #C8502A, #8B3210);
 
   /* Geometry & Softness */
   --radius-card:   20px;
