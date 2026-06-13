@@ -23,6 +23,7 @@ public interface OrderMapper {
     OrderResponse toResponse(Order order);
 
     @Mapping(target = "orderDetailId", source = "detailId")
+    @Mapping(target = "productId", source = "variant.product.productId")
     @Mapping(target = "variantId", source = "variant.variantId")
     @Mapping(target = "productSize", source = "variantInfo")
     @Mapping(target = "price", source = "unitPrice")

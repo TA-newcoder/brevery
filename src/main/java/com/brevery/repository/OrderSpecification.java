@@ -11,7 +11,7 @@ import java.util.List;
 
 public class OrderSpecification {
 
-    public static Specification<Order> filterOrders(OrderStatus status, LocalDateTime fromDate, LocalDateTime toDate, Long userId) {
+    public static Specification<Order> filterOrders(OrderStatus status, LocalDateTime fromDate, LocalDateTime toDate, Long userId, String orderCode) {
         return (root, query, cb) -> {
             List<Predicate> predicates = new ArrayList<>();
 
@@ -29,6 +29,10 @@ public class OrderSpecification {
 
             if (userId != null) {
                 predicates.add(cb.equal(root.get("user").get("userId"), userId));
+            }
+
+            if (orderCode != null && !orderCode.isBlank()) {
+                predicates.add(cb.like(root.get("orderCode"), "%" + orderCode + "%"));
             }
 
             return cb.and(predicates.toArray(new Predicate[0]));

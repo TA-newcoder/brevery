@@ -1,10 +1,14 @@
 <template>
   <div>
     <div class="d-flex justify-content-between align-items-center mb-4">
-      <h4 class="fw-bold mb-0">{{ isEdit ? '✏️ Sửa sản phẩm' : '➕ Thêm sản phẩm' }}</h4>
-      <button v-if="isEdit" class="btn btn-danger btn-sm d-flex align-items-center gap-2" @click="handleDelete" type="button">
-        <PhTrash size="18" weight="bold" /> Xoá sản phẩm
+      <button class="btn btn-sm btn-bakery-ghost d-flex align-items-center gap-2" @click="router.push({ name: 'admin-products' })" type="button">
+        <PhArrowLeft size="18" weight="bold" /> Quay lại
       </button>
+      <div class="d-flex gap-2">
+        <button v-if="isEdit" class="btn btn-outline-danger btn-sm d-flex align-items-center gap-2" @click="handleDelete" type="button">
+          <PhTrash size="18" weight="bold" /> Xoá
+        </button>
+      </div>
     </div>
     
     <div v-if="loadingDetail" class="text-center py-5">
@@ -68,11 +72,26 @@
             </div>
           </div>
         </div>
-        <button type="submit" class="btn btn-bakery w-100 py-2" :disabled="submitting">
-          {{ submitting ? 'Đang lưu...' : (isEdit ? 'Cập nhật' : 'Tạo sản phẩm') }}
-        </button>
+        <div class="d-flex gap-2 mt-2">
+          <button type="button" class="btn btn-light w-50 py-2 fw-semibold" @click="router.push({ name: 'admin-products' })">Hủy</button>
+          <button type="submit" class="btn btn-bakery w-50 py-2 fw-semibold" :disabled="submitting">
+            {{ submitting ? 'Đang lưu...' : (isEdit ? 'Lưu' : 'Tạo mới') }}
+          </button>
+        </div>
       </div>
     </form>
+    <!-- Custom Delete Confirmation Modal -->
+    <div v-if="showDeleteModal" class="modal-overlay d-flex align-items-center justify-content-center" @click.self="showDeleteModal = false">
+      <div class="bakery-card p-4 shadow-lg text-center" style="max-width: 400px; width: 90%;">
+        <div class="text-danger mb-3" style="font-size: 2.5rem;">⚠️</div>
+        <h5 class="fw-bold mb-3" style="color: var(--text-main)">Xác nhận xóa</h5>
+        <p class="text-sub mb-4">Bạn có chắc muốn xóa <strong>{{ form.name }}</strong>? Hành động này không thể hoàn tác.</p>
+        <div class="d-flex gap-2 justify-content-center">
+          <button class="btn btn-light px-4 fw-semibold" @click="showDeleteModal = false">Hủy</button>
+          <button class="btn btn-danger px-4 fw-semibold" @click="handleDeleteConfirm">Xác nhận xóa</button>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -82,7 +101,7 @@ import { useRoute, useRouter } from 'vue-router'
 import { productApi } from '@/api/product.api'
 import { adminApi } from '@/api/admin.api'
 import { toast } from 'vue3-toastify'
-import { PhTrash, PhInfo } from '@phosphor-icons/vue'
+import { PhTrash, PhInfo, PhArrowLeft } from '@phosphor-icons/vue'
 
 const route = useRoute()
 const router = useRouter()
@@ -91,6 +110,7 @@ const submitting = ref(false)
 const loadingDetail = ref(false)
 const files = ref([])
 const previewUrls = ref([])
+const showDeleteModal = ref(false)
 
 const form = reactive({
   name: '', description: '', categoryId: null, status: 'ACTIVE',
@@ -120,15 +140,18 @@ async function handleSubmit() {
   finally { submitting.value = false }
 }
 
-async function handleDelete() {
-  if (confirm('Bạn có chắc chắn muốn xoá sản phẩm này? Hành động này không thể hoàn tác.')) {
-    try {
-      await adminApi.deleteProduct(route.params.id)
-      toast.success('Đã xoá sản phẩm')
-      router.push({ name: 'admin-products' })
-    } catch (err) {
-      toast.error(err.response?.data?.message || 'Xoá sản phẩm thất bại')
-    }
+function handleDelete() {
+  showDeleteModal.value = true
+}
+
+async function handleDeleteConfirm() {
+  try {
+    await adminApi.deleteProduct(route.params.id)
+    toast.success('Đã xoá sản phẩm')
+    showDeleteModal.value = false
+    router.push({ name: 'admin-products' })
+  } catch (err) {
+    toast.error(err.response?.data?.message || 'Xoá sản phẩm thất bại')
   }
 }
 
@@ -154,3 +177,12 @@ onMounted(async () => {
   }
 })
 </script>
+
+<style scoped>
+.modal-overlay {
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0,0,0,0.5);
+  z-index: 2000;
+}
+</style>

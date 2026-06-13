@@ -12,15 +12,19 @@
         <div class="bakery-card mb-4">
           <h5 class="fw-bold mb-3">Thông tin giao hàng</h5>
           <div class="row g-3">
-            <div class="col-md-6">
+            <div class="col-md-4">
               <label class="form-label small fw-semibold">Họ tên người nhận *</label>
               <input v-model="form.recipientName" class="bakery-input" :class="{'border-danger': errors.recipientName}" required placeholder="Họ và tên" />
               <div v-if="errors.recipientName" class="text-danger small mt-1">Vui lòng nhập họ tên</div>
             </div>
-            <div class="col-md-6">
+            <div class="col-md-4">
               <label class="form-label small fw-semibold">Số điện thoại *</label>
               <input v-model="form.recipientPhone" class="bakery-input" :class="{'border-danger': errors.recipientPhone}" required placeholder="0909..." />
               <div v-if="errors.recipientPhone" class="text-danger small mt-1">Vui lòng nhập số điện thoại</div>
+            </div>
+            <div class="col-md-4">
+              <label class="form-label small fw-semibold">Email nhận thông báo đơn hàng</label>
+              <input v-model="form.guestEmail" type="email" class="bakery-input" placeholder="example@email.com" />
             </div>
             
             <div class="col-md-4">
@@ -288,7 +292,7 @@ const timer = ref(240)
 let timerInterval = null
 
 const form = reactive({
-  recipientName: '', recipientPhone: '', address: '', building: '', ward: '', district: '', city: 'TP. Hồ Chí Minh',
+  recipientName: '', recipientPhone: '', guestEmail: '', address: '', building: '', ward: '', district: '', city: 'TP. Hồ Chí Minh',
   paymentMethod: 'COD', couponCode: '', note: '', deliveryTime: 'Càng sớm càng tốt'
 })
 const errors = reactive({ recipientName: false, recipientPhone: false, address: false, district: false, ward: false })

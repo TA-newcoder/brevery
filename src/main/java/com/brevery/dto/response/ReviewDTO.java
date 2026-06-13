@@ -15,9 +15,12 @@ import java.time.LocalDateTime;
 public class ReviewDTO implements Serializable {
 
     private Long reviewId;
-    private String userFullName;
+    private String userName; // To match what we used: userFullName -> userName
     private String userAvatar;
+    private String productName;
     private Integer rating;
     private String comment;
+    private String status;
+    private String adminReply;
     private LocalDateTime createdAt;
 }

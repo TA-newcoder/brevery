@@ -41,9 +41,12 @@ public class Review {
     @Column(length = 1000)
     private String comment;
 
-    @Column(nullable = false)
+    @Column(nullable = false, length = 20)
     @Builder.Default
-    private Boolean isVisible = true;
+    private String status = "PENDING"; // PENDING, APPROVED, HIDDEN
+
+    @Column(length = 1000)
+    private String adminReply;
 
     @CreationTimestamp
     @Column(updatable = false)

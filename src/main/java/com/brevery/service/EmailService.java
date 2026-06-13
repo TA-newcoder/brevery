@@ -89,4 +89,63 @@ public class EmailService {
                 </div>
                 """.formatted(fullName, resetUrl);
     }
+
+    /**
+     * Gửi email xác nhận đặt hàng thành công (async).
+     */
+    @Async
+    public void sendOrderConfirmationEmail(String toEmail, String fullName, String orderCode, java.math.BigDecimal total) {
+        String subject = "Xác nhận đơn hàng #" + orderCode + " - Brevery";
+        String totalFormatted = new java.text.DecimalFormat("#,###đ").format(total);
+        String trackUrl = "http://localhost:5173/track?code=" + orderCode;
+        
+        String body = """
+                <div style="font-family:Arial,sans-serif;max-width:500px;margin:0 auto;padding:20px;">
+                  <h2 style="color:#D4875A;">📦 Xác nhận đơn hàng</h2>
+                  <p>Xin chào <strong>%s</strong>,</p>
+                  <p>Cảm ơn bạn đã đặt hàng tại Brevery. Đơn hàng <strong>#%s</strong> của bạn đã được ghi nhận.</p>
+                  <p>Tổng tiền thanh toán: <strong>%s</strong></p>
+                  <p>Bạn có thể tra cứu trạng thái đơn hàng của mình bằng cách nhấn vào nút bên dưới:</p>
+                  <a href="%s"
+                     style="display:inline-block;background:#D4875A;color:#fff;padding:12px 28px;
+                            border-radius:12px;text-decoration:none;font-weight:bold;margin:16px 0;">
+                     Tra cứu đơn hàng
+                  </a>
+                </div>
+                """.formatted(fullName, orderCode, totalFormatted, trackUrl);
+        sendHtmlEmail(toEmail, subject, body);
+    }
+
+    /**
+     * Gửi email cập nhật trạng thái đơn hàng (async).
+     */
+    @Async
+    public void sendOrderStatusUpdateEmail(String toEmail, String fullName, String orderCode, com.brevery.enums.OrderStatus status) {
+        String subject = "Cập nhật đơn hàng #" + orderCode + " - Brevery";
+        String trackUrl = "http://localhost:5173/track?code=" + orderCode;
+        
+        String statusText = switch (status) {
+            case CONFIRMED -> "đã được xác nhận";
+            case PREPARING -> "đang được chuẩn bị";
+            case DELIVERING -> "đang trên đường giao đến bạn";
+            case COMPLETED -> "đã giao thành công";
+            case CANCELLED -> "đã bị hủy";
+            default -> "vừa được cập nhật";
+        };
+        
+        String body = """
+                <div style="font-family:Arial,sans-serif;max-width:500px;margin:0 auto;padding:20px;">
+                  <h2 style="color:#D4875A;">🚚 Cập nhật đơn hàng</h2>
+                  <p>Xin chào <strong>%s</strong>,</p>
+                  <p>Đơn hàng <strong>#%s</strong> của bạn <strong>%s</strong>.</p>
+                  <p>Bạn có thể xem chi tiết trạng thái đơn hàng tại:</p>
+                  <a href="%s"
+                     style="display:inline-block;background:#D4875A;color:#fff;padding:12px 28px;
+                            border-radius:12px;text-decoration:none;font-weight:bold;margin:16px 0;">
+                     Xem đơn hàng
+                  </a>
+                </div>
+                """.formatted(fullName, orderCode, statusText, trackUrl);
+        sendHtmlEmail(toEmail, subject, body);
+    }
 }

@@ -86,8 +86,8 @@ public class ProductService {
     }
 
     public Page<ReviewDTO> getProductReviews(Long id, Pageable pageable) {
-        // Chỉ lấy các review được hiển thị công khai (isVisible = true)
-        return reviewRepository.findByProductProductIdAndIsVisibleTrue(id, pageable)
+        // Chỉ lấy các review được hiển thị công khai (status = "APPROVED")
+        return reviewRepository.findByProductProductIdAndStatus(id, "APPROVED", pageable)
                 .map(productMapper::toReviewDTO);
     }
 

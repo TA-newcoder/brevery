@@ -1,15 +1,32 @@
+/* Global smooth scroll */
+html {
+  scroll-behavior: smooth;
+}
+
 :root {
   /* Premium Earthy/Warm Palette (Core) */
   --bg-app:                #FAF2E9;
   --bg-surface:            #FFFFFF;
+  --bg-surface-raised:     #FFFFFF;
+  --bg-muted:              #F6EEE7;
   --primary:               #C85A32;
   --primary-light:         #F4E2D8;
   --text-main:             #2C1E16;
   --text-sub:              #756B64;
+  --text-muted:            #9E948C;
+  --border-color:          #EAE0DA;
+  --border-light:          #F0E6DE;
 
   /* Primary shades (derived from --primary, keeps base hue) */
   --primary-dark:          #8B3210;
   --primary-soft:          #FDF6EE;
+
+  /* Light-mode card surfaces (warm-tinted glass) */
+  --card-dark-bg:          #FFFFFF;
+  --card-dark-text:        var(--text-main);
+  --card-dark-sub:         var(--text-sub);
+  --card-dark-accent:      var(--primary);
+  --card-dark-border:      #F0E6DE;
 
   /* Warm-harmonized accent tints (used by badges, status pills, auth gradients) */
   --accent-rose:           #FBE4E4;
@@ -20,6 +37,16 @@
   --accent-sage-text:      #4A9B5C;
   --accent-honey:          #FBEFD6;
   --accent-honey-text:     #B9851F;
+
+  /* Semantic colors for states */
+  --color-success:         #4A9B5C;
+  --color-success-light:   #E3F0E4;
+  --color-warning:         #B9851F;
+  --color-warning-light:   #FBEFD6;
+  --color-danger:          #C2616A;
+  --color-danger-light:    #FBE4E4;
+  --color-info:            #7B6CC8;
+  --color-info-light:      #ECE7F7;
 
   /* Aliases for backwards compatibility with existing components */
   --bakery-bg:             var(--bg-app);
@@ -42,9 +69,102 @@
   --radius-btn:    9999px; /* Pill-shaped */
   --radius-badge:  9999px;
   --radius-input:  12px;
+  --radius-md:     12px;
+  --radius-sm:     8px;
 
   /* Premium Shadows */
   --shadow-soft:   0 10px 40px -10px rgba(44, 30, 22, 0.08);
-  --shadow-card:   var(--shadow-soft);
-  --shadow-hover:  0 12px 48px -12px rgba(200, 90, 50, 0.2);
+  --shadow-card:   0 4px 24px -4px rgba(44, 30, 22, 0.06), 0 1px 3px rgba(44, 30, 22, 0.04);
+  --shadow-hover:  0 16px 48px -8px rgba(200, 90, 50, 0.18), 0 4px 12px rgba(200, 90, 50, 0.08);
+  --shadow-inset:  inset 0 2px 4px rgba(44, 30, 22, 0.06);
+  --shadow-glass:  0 8px 32px -4px rgba(44, 30, 22, 0.06);
+
+  /* Timing */
+  --ease-out:      cubic-bezier(0.2, 0, 0, 1);
+  --ease-spring:   cubic-bezier(0.25, 1, 0.5, 1);
+  --ease-smooth:   cubic-bezier(0.4, 0, 0.2, 1);
+  --duration-fast: 0.2s;
+  --duration-base: 0.35s;
+  --duration-slow: 0.5s;
+
+  /* Chart colors */
+  --chart-1:       #C85A32;
+  --chart-2:       #7B6CC8;
+  --chart-3:       #4A9B5C;
+  --chart-4:       #B9851F;
+  --chart-5:       #C2616A;
+}
+
+/* ==================== DARK MODE ==================== */
+[data-theme="dark"] {
+  --bg-app:                #1A1412;
+  --bg-surface:            #241E1A;
+  --bg-surface-raised:     #2E2622;
+  --bg-muted:              #332B26;
+  --primary:               #E07A54;
+  --primary-light:         #3A261E;
+  --primary-dark:          #F4A280;
+  --primary-soft:          #2A1E18;
+  --text-main:             #F0E8E0;
+  --text-sub:              #A89888;
+  --text-muted:            #7A6E64;
+  --border-color:          #3A322C;
+  --border-light:          #332B26;
+
+  /* Dark-mode card surfaces */
+  --card-dark-bg:          #1a0f0a;
+  --card-dark-text:        #FAF2E9;
+  --card-dark-sub:         #dcd0c0;
+  --card-dark-accent:      #E07340;
+  --card-dark-border:      #3A322C;
+
+  /* Accent tints (darker bg, same hue) */
+  --accent-rose:           #3A2626;
+  --accent-rose-text:      #E88A92;
+  --accent-plum:           #2A2640;
+  --accent-plum-text:      #A898E0;
+  --accent-sage:           #1E3020;
+  --accent-sage-text:      #7CC48C;
+  --accent-honey:          #3A3018;
+  --accent-honey-text:     #D4A840;
+
+  /* Semantic */
+  --color-success:         #7CC48C;
+  --color-success-light:   #1E3020;
+  --color-warning:         #D4A840;
+  --color-warning-light:   #3A3018;
+  --color-danger:          #E88A92;
+  --color-danger-light:    #3A2626;
+  --color-info:            #A898E0;
+  --color-info-light:      #2A2640;
+
+  /* Aliases update */
+  --bakery-bg:             var(--bg-app);
+  --bakery-surface:        var(--bg-surface);
+  --bakery-primary:        var(--primary);
+  --bakery-primary-light:  var(--primary-light);
+  --bakery-text:           var(--text-main);
+  --bakery-text-sub:       var(--text-sub);
+  --bakery-accent-light:   var(--accent-rose);
+  --bakery-purple-light:   var(--accent-plum);
+  --bakery-green-light:    var(--accent-sage);
+
+  /* Gradients */
+  --gradient-primary:      linear-gradient(135deg, #E07A54 0%, #C85A32 55%, #A04420 100%);
+  --gradient-warm:         linear-gradient(135deg, #2A1E18 0%, #3A261E 100%);
+  --gradient-brand-text:   linear-gradient(90deg, #E07A54, #F4A280);
+
+  /* Shadows */
+  --shadow-soft:   0 10px 40px -10px rgba(0, 0, 0, 0.3);
+  --shadow-card:   0 4px 24px -4px rgba(0, 0, 0, 0.25), 0 1px 3px rgba(0, 0, 0, 0.15);
+  --shadow-hover:  0 16px 48px -8px rgba(224, 122, 84, 0.25), 0 4px 12px rgba(224, 122, 84, 0.1);
+  --shadow-inset:  inset 0 2px 4px rgba(0, 0, 0, 0.2);
+  --shadow-glass:  0 8px 32px -4px rgba(0, 0, 0, 0.2);
+
+  /* Chart */
+  --chart-1:       #E07A54;
+  --chart-2:       #A898E0;
+  --chart-3:       #7CC48C;
+  --chart-4:       #D4A840;
+  --chart-5:       #E88A92;
 }

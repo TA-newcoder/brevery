@@ -37,11 +37,12 @@ public class AdminOrderController {
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime fromDate,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime toDate,
             @RequestParam(required = false) Long userId,
+            @RequestParam(required = false) String orderCode,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size) {
 
         Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createdAt"));
-        Page<OrderResponse> orders = orderService.getAllOrdersForAdmin(status, fromDate, toDate, userId, pageable);
+        Page<OrderResponse> orders = orderService.getAllOrdersForAdmin(status, fromDate, toDate, userId, orderCode, pageable);
         return ResponseEntity.ok(ApiResponse.success(orders));
     }
 
@@ -62,9 +63,10 @@ public class AdminOrderController {
             @RequestParam(required = false) OrderStatus status,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime fromDate,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime toDate,
-            @RequestParam(required = false) Long userId) {
+            @RequestParam(required = false) Long userId,
+            @RequestParam(required = false) String orderCode) {
 
-        byte[] excelBytes = orderService.exportOrdersToExcel(status, fromDate, toDate, userId);
+        byte[] excelBytes = orderService.exportOrdersToExcel(status, fromDate, toDate, userId, orderCode);
         String filename = "Orders_Export_" + LocalDateTime.now().format(java.time.format.DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss")) + ".xlsx";
 
         return ResponseEntity.ok()

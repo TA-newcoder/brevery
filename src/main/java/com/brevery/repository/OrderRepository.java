@@ -19,6 +19,8 @@ public interface OrderRepository extends JpaRepository<Order, Long>, JpaSpecific
     Page<Order> findByUserUserId(Long userId, Pageable pageable);
 
     Optional<Order> findByOrderCode(String orderCode);
+    
+    java.util.List<Order> findByCreatedAtBetween(LocalDateTime startDate, LocalDateTime endDate);
 
     @Query("SELECT o FROM Order o LEFT JOIN FETCH o.orderDetails WHERE o.orderId = :id")
     Optional<Order> findByIdWithDetails(@Param("id") Long id);
@@ -29,13 +31,21 @@ public interface OrderRepository extends JpaRepository<Order, Long>, JpaSpecific
     @Query("SELECT SUM(o.totalAmount) FROM Order o WHERE o.user.userId = :userId AND o.status <> com.brevery.enums.OrderStatus.CANCELLED")
     BigDecimal sumTotalAmountByUserUserId(@Param("userId") Long userId);
 
-    @Query("SELECT SUM(o.totalAmount) FROM Order o WHERE o.createdAt BETWEEN :startDate AND :endDate AND o.status <> com.brevery.enums.OrderStatus.CANCELLED")
+    @Query("SELECT SUM(o.totalAmount) FROM Order o WHERE o.createdAt BETWEEN :startDate AND :endDate AND o.status = com.brevery.enums.OrderStatus.COMPLETED")
     BigDecimal sumTotalAmountBetween(@Param("startDate") LocalDateTime startDate,
             @Param("endDate") LocalDateTime endDate);
 
-    @Query("SELECT COUNT(o) FROM Order o WHERE o.createdAt BETWEEN :startDate AND :endDate AND o.status <> com.brevery.enums.OrderStatus.CANCELLED")
+    @Query("SELECT COUNT(o) FROM Order o WHERE o.createdAt BETWEEN :startDate AND :endDate AND o.status = com.brevery.enums.OrderStatus.COMPLETED")
     Long countOrdersBetween(@Param("startDate") LocalDateTime startDate, @Param("endDate") LocalDateTime endDate);
 
     @Query("SELECT COUNT(o) FROM Order o WHERE o.status = :status")
     Long countByStatus(@Param("status") OrderStatus status);
+
+    @Query(value = "SELECT CAST(created_at AS DATE) as date, SUM(total_amount) as revenue, COUNT(order_id) as orderCount " +
+                   "FROM orders " +
+                   "WHERE created_at BETWEEN :startDate AND :endDate " +
+                   "AND status = 'COMPLETED' " +
+                   "GROUP BY CAST(created_at AS DATE) " +
+                   "ORDER BY CAST(created_at AS DATE) ASC", nativeQuery = true)
+    java.util.List<Object[]> getRevenueChartData(@Param("startDate") LocalDateTime startDate, @Param("endDate") LocalDateTime endDate);
 }

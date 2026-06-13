@@ -10,12 +10,14 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public interface ReviewRepository extends JpaRepository<Review, Long> {
-    Page<Review> findByProductProductIdAndIsVisibleTrue(Long productId, Pageable pageable);
+    Page<Review> findByProductProductIdAndStatus(Long productId, String status, Pageable pageable);
+    
+    Page<Review> findByStatus(String status, Pageable pageable);
 
-    @Query("SELECT COUNT(r) FROM Review r WHERE r.product.productId = :productId AND r.isVisible = true")
+    @Query("SELECT COUNT(r) FROM Review r WHERE r.product.productId = :productId AND r.status = 'APPROVED'")
     Long countActiveReviewsByProductId(@Param("productId") Long productId);
 
-    @Query("SELECT AVG(CAST(r.rating AS double)) FROM Review r WHERE r.product.productId = :productId AND r.isVisible = true")
+    @Query("SELECT AVG(CAST(r.rating AS double)) FROM Review r WHERE r.product.productId = :productId AND r.status = 'APPROVED'")
     Double getAverageRatingByProductId(@Param("productId") Long productId);
 
     boolean existsByProductProductIdAndUserUserIdAndOrderOrderId(Long productId, Long userId, Long orderId);

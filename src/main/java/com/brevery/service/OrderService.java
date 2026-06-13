@@ -42,6 +42,7 @@ public class OrderService {
     private final NotificationService notificationService;
     private final ReviewRepository reviewRepository;
     private final ProductRepository productRepository;
+    private final EmailService emailService;
 
     @Transactional
     public OrderResponse createOrder(Long userId, CreateOrderRequest request) {
@@ -181,6 +182,12 @@ public class OrderService {
         OrderResponse response = orderMapper.toResponse(savedOrder);
         notificationService.sendNewOrderNotification(response);
 
+        // Gửi email xác nhận
+        String recipientEmail = user != null ? user.getEmail() : request.getGuestEmail();
+        if (recipientEmail != null && !recipientEmail.isBlank()) {
+            emailService.sendOrderConfirmationEmail(recipientEmail, request.getReceiverName(), orderCode, finalAmount);
+        }
+
         return response;
     }
 
@@ -214,7 +221,7 @@ public class OrderService {
             if (current == OrderStatus.CANCELLED) {
                 throw new AppException(ErrorCode.VALIDATION_ERROR, "Không thể cập nhật đơn hàng đã hủy");
             }
-            if (current == OrderStatus.DELIVERED) {
+            if (current == OrderStatus.COMPLETED) {
                 throw new AppException(ErrorCode.VALIDATION_ERROR, "Không thể cập nhật đơn hàng đã giao thành công");
             }
 
@@ -223,9 +230,13 @@ public class OrderService {
             if (current == OrderStatus.PENDING) {
                 isValidTransition = (status == OrderStatus.CONFIRMED || status == OrderStatus.CANCELLED);
             } else if (current == OrderStatus.CONFIRMED) {
-                isValidTransition = (status == OrderStatus.SHIPPING || status == OrderStatus.CANCELLED);
-            } else if (current == OrderStatus.SHIPPING) {
-                isValidTransition = (status == OrderStatus.DELIVERED || status == OrderStatus.CANCELLED);
+                isValidTransition = (status == OrderStatus.PREPARING || status == OrderStatus.CANCELLED);
+            } else if (current == OrderStatus.PREPARING) {
+                isValidTransition = (status == OrderStatus.SHIPPED || status == OrderStatus.CANCELLED);
+            } else if (current == OrderStatus.SHIPPED) {
+                isValidTransition = (status == OrderStatus.DELIVERING || status == OrderStatus.CANCELLED);
+            } else if (current == OrderStatus.DELIVERING) {
+                isValidTransition = (status == OrderStatus.COMPLETED || status == OrderStatus.CANCELLED);
             }
 
             if (!isValidTransition) {
@@ -260,6 +271,11 @@ public class OrderService {
         notificationService.sendAdminNotification(response);
         if (savedOrder.getUser() != null) {
             notificationService.sendUserNotification(savedOrder.getUser().getUserId(), response);
+            
+            // Gửi email cập nhật trạng thái
+            if (status != null && savedOrder.getUser().getEmail() != null && !savedOrder.getUser().getEmail().isBlank()) {
+                emailService.sendOrderStatusUpdateEmail(savedOrder.getUser().getEmail(), savedOrder.getUser().getFullName(), savedOrder.getOrderCode(), status);
+            }
         }
     }
 
@@ -294,6 +310,11 @@ public class OrderService {
 
         OrderResponse response = orderMapper.toResponse(savedOrder);
         notificationService.sendAdminNotification(response);
+        
+        // Gửi email cập nhật trạng thái hủy
+        if (savedOrder.getUser() != null && savedOrder.getUser().getEmail() != null && !savedOrder.getUser().getEmail().isBlank()) {
+            emailService.sendOrderStatusUpdateEmail(savedOrder.getUser().getEmail(), savedOrder.getUser().getFullName(), savedOrder.getOrderCode(), OrderStatus.CANCELLED);
+        }
     }
 
     @Transactional
@@ -305,7 +326,7 @@ public class OrderService {
             throw new AppException(ErrorCode.UNAUTHORIZED, "Bạn không có quyền đánh giá sản phẩm của đơn hàng này");
         }
 
-        if (order.getStatus() != OrderStatus.DELIVERED) {
+        if (order.getStatus() != OrderStatus.COMPLETED) {
             throw new AppException(ErrorCode.VALIDATION_ERROR, "Chỉ có thể đánh giá sản phẩm sau khi đơn hàng đã giao thành công");
         }
 
@@ -335,7 +356,7 @@ public class OrderService {
                 .user(user)
                 .rating(reviewRequest.getRating())
                 .comment(reviewRequest.getComment())
-                .isVisible(true)
+                .status("PENDING")
                 .build();
 
         reviewRepository.save(review);
@@ -343,20 +364,21 @@ public class OrderService {
     }
 
     @Transactional(readOnly = true)
-    public Page<OrderResponse> getAllOrdersForAdmin(OrderStatus status, LocalDateTime fromDate, LocalDateTime toDate, Long userId, Pageable pageable) {
-        org.springframework.data.jpa.domain.Specification<Order> spec = OrderSpecification.filterOrders(status, fromDate, toDate, userId);
+    public Page<OrderResponse> getAllOrdersForAdmin(OrderStatus status, LocalDateTime fromDate, LocalDateTime toDate, Long userId, String orderCode, Pageable pageable) {
+        org.springframework.data.jpa.domain.Specification<Order> spec = OrderSpecification.filterOrders(status, fromDate, toDate, userId, orderCode);
         return orderRepository.findAll(spec, pageable)
                 .map(orderMapper::toResponse);
     }
 
     @Transactional(readOnly = true)
-    public List<Order> getAllOrdersForAdminList(OrderStatus status, LocalDateTime fromDate, LocalDateTime toDate, Long userId) {
-        org.springframework.data.jpa.domain.Specification<Order> spec = OrderSpecification.filterOrders(status, fromDate, toDate, userId);
+    public List<Order> getAllOrdersForAdminList(OrderStatus status, LocalDateTime fromDate, LocalDateTime toDate, Long userId, String orderCode) {
+        org.springframework.data.jpa.domain.Specification<Order> spec = OrderSpecification.filterOrders(status, fromDate, toDate, userId, orderCode);
         return orderRepository.findAll(spec);
     }
 
-    public byte[] exportOrdersToExcel(OrderStatus status, LocalDateTime fromDate, LocalDateTime toDate, Long userId) {
-        List<Order> orders = getAllOrdersForAdminList(status, fromDate, toDate, userId);
+    @Transactional(readOnly = true)
+    public byte[] exportOrdersToExcel(OrderStatus status, LocalDateTime fromDate, LocalDateTime toDate, Long userId, String orderCode) {
+        List<Order> orders = getAllOrdersForAdminList(status, fromDate, toDate, userId, orderCode);
 
         try (org.apache.poi.xssf.usermodel.XSSFWorkbook workbook = new org.apache.poi.xssf.usermodel.XSSFWorkbook();
              java.io.ByteArrayOutputStream out = new java.io.ByteArrayOutputStream()) {

@@ -7,4 +7,6 @@ import lombok.Data;
 public class ChatRequest {
     @NotBlank(message = "Nội dung tin nhắn không được để trống")
     private String message;
+    
+    private boolean admin = false;
 }

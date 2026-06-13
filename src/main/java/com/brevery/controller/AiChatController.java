@@ -34,7 +34,7 @@ public class AiChatController {
             clientIp = servletRequest.getRemoteAddr();
         }
 
-        String reply = aiService.chat(request.getMessage(), clientIp);
+        String reply = aiService.chat(request.getMessage(), clientIp, request.isAdmin());
         return ResponseEntity.ok(ApiResponse.success(new ChatResponse(reply)));
     }
 }

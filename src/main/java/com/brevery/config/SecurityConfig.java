@@ -56,8 +56,9 @@ public class SecurityConfig {
                             "/h2-console/**"
                     ).permitAll()
 
-                    // PUBLIC — Actuator health
+                    // PUBLIC — Actuator health & WebSocket
                     .requestMatchers("/actuator/health").permitAll()
+                    .requestMatchers("/ws/**").permitAll()
 
                     // ADMIN only
                     .requestMatchers("/api/v1/admin/**").hasRole("ADMIN")

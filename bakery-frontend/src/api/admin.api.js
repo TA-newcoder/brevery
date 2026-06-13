@@ -11,8 +11,18 @@ export const adminApi = {
 
   // Orders
   getOrders: (params) => api.get('/admin/orders', { params }),
-  updateOrderStatus: (orderId, status) => api.patch(`/admin/orders/${orderId}/status`, null, { params: { newStatus: status } }),
+  updateOrderStatus: (orderId, status) => api.patch(`/admin/orders/${orderId}/status?status=${status}`),
   exportOrders: (params) => api.get('/admin/orders/export', { params, responseType: 'blob' }),
+
+  // Inventory
+  getLowStock: (threshold = 10) => api.get('/admin/inventory/low-stock', { params: { threshold } }),
+  getReceipts: (params) => api.get('/admin/inventory/receipts', { params }),
+  createReceipt: (data) => api.post('/admin/inventory/receipts', data),
+
+  // Reviews
+  getReviews: (params) => api.get('/admin/reviews', { params }),
+  updateReviewStatus: (reviewId, status) => api.patch(`/admin/reviews/${reviewId}/status?status=${status}`),
+  replyToReview: (reviewId, reply) => api.post(`/admin/reviews/${reviewId}/reply?reply=${encodeURIComponent(reply)}`),
 
   // Users
   getUsers: (params) => api.get('/admin/users', { params }),

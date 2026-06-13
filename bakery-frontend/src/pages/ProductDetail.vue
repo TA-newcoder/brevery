@@ -84,6 +84,9 @@
           <span class="text-sub small">{{ formatDate(r.createdAt) }}</span>
         </div>
         <p class="mb-0 mt-2 text-sub">{{ r.comment }}</p>
+        <div v-if="r.adminReply" class="mt-2 p-2 rounded small" style="background: var(--bg-muted); border-left: 3px solid var(--bakery-primary)">
+          <span class="fw-semibold text-main">Brevery Shop:</span> {{ r.adminReply }}
+        </div>
       </div>
       <Pagination v-model="reviewPage" :total-pages="reviewTotalPages" @update:model-value="fetchReviews" />
     </div>

@@ -37,8 +37,9 @@ public interface ProductMapper {
 
     ProductDetailDTO.ImageDTO toImageDTO(ProductImage image);
 
-    @Mapping(target = "userFullName", source = "user.fullName")
+    @Mapping(target = "userName", source = "user.fullName")
     @Mapping(target = "userAvatar", source = "user.avatarUrl")
+    @Mapping(target = "productName", source = "product.name")
     ReviewDTO toReviewDTO(Review review);
 
     @Named("getPrimaryImageUrl")
@@ -73,7 +74,7 @@ public interface ProductMapper {
     default Double getAvgRating(List<Review> reviews) {
         if (reviews == null || reviews.isEmpty()) return 0.0;
         return reviews.stream()
-                .filter(Review::getIsVisible)
+                .filter(r -> "APPROVED".equals(r.getStatus()))
                 .mapToDouble(Review::getRating)
                 .average()
                 .orElse(0.0);
@@ -83,7 +84,7 @@ public interface ProductMapper {
     default Long getReviewCount(List<Review> reviews) {
         if (reviews == null) return 0L;
         return reviews.stream()
-                .filter(Review::getIsVisible)
+                .filter(r -> "APPROVED".equals(r.getStatus()))
                 .count();
     }
 }

@@ -31,3 +31,14 @@ build/
 
 ### VS Code ###
 .vscode/
+
+### Log files ###
+*.log
+logs/
+
+### Build outputs ###
+bakery-frontend/dist/
+bakery-frontend/.eslintcache
+
+### IDE / Tool caches ###
+.codegraph/

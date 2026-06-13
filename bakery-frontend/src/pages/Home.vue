@@ -21,8 +21,8 @@
             
             <!-- Heading -->
             <h1 class="fw-bold mb-0 hero-title" style="letter-spacing: -1px; line-height: 1.2;">
-              <span style="color: #2D1B0E; white-space: nowrap; font-size: min(52px, 8vw); display: block;">Bánh ngọt & Đồ uống</span>
-              <span style="color: #C8502A; font-size: min(52px, 8vw); display: block;">tươi mới mỗi ngày</span>
+              <span :style="{ color: isHeroBgDark ? '#FFFFFF' : '#2D1B0E' }" style="white-space: nowrap; font-size: min(52px, 8vw); display: block; transition: color 0.3s ease;">Bánh ngọt & Đồ uống</span>
+              <span :style="{ color: isHeroBgDark ? '#FFA07A' : '#C8502A' }" style="font-size: min(52px, 8vw); display: block; transition: color 0.3s ease;">tươi mới mỗi ngày</span>
             </h1>
             
             <!-- Description -->
@@ -33,8 +33,36 @@
             
             <!-- CTAs -->
             <div class="d-flex flex-wrap gap-3 mt-2">
-              <router-link to="/products" class="btn btn-hero-primary btn-lg px-4 fw-bold shadow-sm d-flex align-items-center justify-content-center">
-                <PhBag size="18" weight="bold" class="me-2" /> Đặt hàng ngay
+              <router-link to="/products" class="sparkle-button btn-lg shadow-sm" style="--btn-glow-color: hsla(25, 80%, 50%, 0.75);">
+                <div class="dots_border"></div>
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" class="sparkle">
+                  <path class="path" stroke-linejoin="round" stroke-linecap="round"
+                    stroke="#E07340" fill="#E07340"
+                    d="M14.187 8.096L15 5.25L15.813 8.096C16.0231 8.83114 16.4171 9.50062
+                    16.9577 10.0413C17.4984 10.5819 18.1679 10.9759 18.903 11.186L21.75 12L18.904
+                    12.813C18.1689 13.0231 17.4994 13.4171 16.9587 13.9577C16.4181 14.4984 16.0241
+                    15.1679 15.814 15.903L15 18.75L14.187 15.904C13.9769 15.1689 13.5829 14.4994
+                    13.0423 13.9587C12.5016 13.4181 11.8321 13.0241 11.097 12.814L8.25 12L11.096
+                    11.187C11.8311 10.9769 12.5006 10.5829 13.0413 10.0423C13.5819 9.50162 13.9759
+                    8.83214 14.186 8.097L14.187 8.096Z"/>
+                  <path class="path" stroke-linejoin="round" stroke-linecap="round"
+                    stroke="#E07340" fill="#E07340"
+                    d="M6 14.25L5.741 15.285C5.59267 15.8785 5.28579 16.4206 4.85319 16.8532C4.42059
+                    17.2858 3.87853 17.5927 3.285 17.741L2.25 18L3.285 18.259C3.87853 18.4073 4.42059
+                    18.7142 4.85319 19.1468C5.28579 19.5794 5.59267 20.1215 5.741 20.715L6 21.75L6.259
+                    20.715C6.40725 20.1216 6.71398 19.5796 7.14639 19.147C7.5788 18.7144 8.12065 18.4075
+                    8.714 18.259L9.75 18L8.714 17.741C8.12065 17.5925 7.5788 17.2856 7.14639 16.853C6.71398
+                    16.4204 6.40725 15.8784 6.259 15.285L6 14.25Z"/>
+                  <path class="path" stroke-linejoin="round" stroke-linecap="round"
+                    stroke="#E07340" fill="#E07340"
+                    d="M6.5 4L6.303 4.5915C6.24777 4.75718 6.15472 4.90774 6.03123 5.03123C5.90774
+                    5.15472 5.75718 5.24777 5.5915 5.303L5 5.5L5.5915 5.697C5.75718 5.75223 5.90774
+                    5.84528 6.03123 5.96877C6.15472 6.09226 6.24777 6.24282 6.303 6.4085L6.5 7L6.697
+                    6.4085C6.75223 6.24282 6.84528 6.09226 6.96877 5.96877C7.09226 5.84528 7.24282
+                    5.75223 7.4085 5.697L8 5.5L7.4085 5.303C7.24282 5.24777 7.09226 5.15472 6.96877
+                    5.03123C6.84528 4.90774 6.75223 4.75718 6.697 4.5915L6.5 4Z"/>
+                </svg>
+                <span class="text_button">Đặt hàng ngay</span>
               </router-link>
               <router-link to="/products" class="btn btn-hero-secondary btn-lg px-4 fw-bold shadow-sm d-flex align-items-center justify-content-center">
                 <PhBookOpen size="18" weight="bold" class="me-2" /> Xem thực đơn
@@ -57,7 +85,10 @@
           
           <!-- Right Column -->
           <div class="col-lg-6 hero-image-col position-relative d-none d-lg-block">
-            <div class="hero-image-wrapper position-relative mx-auto">
+            <div class="hero-image-wrapper position-relative mx-auto"
+                 @mousemove="handleMouseMove" 
+                 @mouseleave="resetTilt"
+                 :style="{ transform: 'perspective(1000px) rotateX(' + tiltY + 'deg) rotateY(' + tiltX + 'deg) translateY(' + (scrollY * 0.05) + 'px)' }">
               <!-- Decorative ring -->
               <div class="hero-ring"></div>
               
@@ -92,25 +123,30 @@
 
     <!-- 2b. STATS COUNTER STRIP -->
     <section class="container py-4 reveal-on-scroll">
-      <div ref="statStrip" class="stat-strip d-flex flex-wrap align-items-center justify-content-around text-center px-3 py-4">
-        <div class="stat-item px-3 py-2">
-          <div class="stat-value">{{ stats.years }}+</div>
-          <div class="stat-label">Năm kinh nghiệm</div>
+      <div ref="statStrip" class="d-flex flex-wrap gap-4 justify-content-center align-items-center py-4">
+        <div class="stat-magic-card animate-stagger" style="transition-delay: 0.1s">
+          <div class="stat-magic-card-info">
+            <div class="stat-value">{{ stats.orders.toLocaleString('vi-VN') }}+</div>
+            <div class="stat-label">Tổng đơn hàng</div>
+          </div>
         </div>
-        <div class="stat-divider d-none d-md-block"></div>
-        <div class="stat-item px-3 py-2">
-          <div class="stat-value">{{ stats.customers.toLocaleString('vi-VN') }}+</div>
-          <div class="stat-label">Khách hàng hài lòng</div>
+        <div class="stat-magic-card animate-stagger" style="transition-delay: 0.2s">
+          <div class="stat-magic-card-info">
+            <div class="stat-value">{{ stats.revenue }}M+</div>
+            <div class="stat-label">Doanh thu</div>
+          </div>
         </div>
-        <div class="stat-divider d-none d-md-block"></div>
-        <div class="stat-item px-3 py-2">
-          <div class="stat-value">{{ stats.menu }}+</div>
-          <div class="stat-label">Món trong thực đơn</div>
+        <div class="stat-magic-card animate-stagger" style="transition-delay: 0.3s">
+          <div class="stat-magic-card-info">
+            <div class="stat-value">{{ stats.customers.toLocaleString('vi-VN') }}+</div>
+            <div class="stat-label">Khách hàng</div>
+          </div>
         </div>
-        <div class="stat-divider d-none d-md-block"></div>
-        <div class="stat-item px-3 py-2">
-          <div class="stat-value">{{ stats.minutes }}'</div>
-          <div class="stat-label">Phút giao trung bình</div>
+        <div class="stat-magic-card animate-stagger" style="transition-delay: 0.4s">
+          <div class="stat-magic-card-info">
+            <div class="stat-value">{{ (stats.rating / 10).toFixed(1) }}★</div>
+            <div class="stat-label">Đánh giá</div>
+          </div>
         </div>
       </div>
     </section>
@@ -200,7 +236,7 @@
     </section>
 
     <!-- 5. HOW IT WORKS -->
-    <section class="py-5 py-lg-6 bg-white reveal-on-scroll">
+    <section class="py-5 py-lg-6 reveal-on-scroll" style="background: var(--bg-surface)">
       <div class="container text-center">
         <h2 class="fw-bold mb-5 d-flex align-items-center justify-content-center">
           Đặt hàng chỉ 3 bước <PhRocket size="32" weight="fill" color="#C8502A" class="ms-2" />
@@ -243,7 +279,7 @@
     </section>
 
     <!-- 6. TESTIMONIALS -->
-    <section class="py-5 py-lg-6 reveal-on-scroll" style="background-color: #FDF6EE;">
+    <section class="py-5 py-lg-6 reveal-on-scroll" style="background-color: var(--primary-soft);">
       <div class="container">
         <div class="text-center mb-5">
           <h2 class="fw-bold">Khách hàng nói gì? 💬</h2>
@@ -252,7 +288,7 @@
         <div class="testimonial-slider overflow-hidden position-relative">
           <div class="d-flex transition-transform" :style="{ transform: `translateX(-${currentSlide * slideWidth}%)` }" style="transition: transform 0.5s ease-in-out;">
             <div v-for="(review, index) in testimonials" :key="index" class="testimonial-slide px-2">
-              <div class="bg-white p-4 rounded-4 shadow-sm h-100 d-flex flex-column">
+              <div class="bg-white p-4 rounded-4 shadow-sm h-100 d-flex flex-column" style="background: var(--bg-surface) !important; border: 1px solid var(--border-light); transition: background var(--duration-slow) var(--ease-smooth), border-color var(--duration-slow) var(--ease-smooth);">
                 <div class="d-flex text-warning mb-3">
                   <PhStar v-for="n in 5" :key="n" size="18" weight="fill" />
                 </div>
@@ -280,35 +316,41 @@
     </section>
 
     <!-- 7. TẠI SAO CHỌN BREVERY -->
-    <section class="py-5 py-lg-6 bg-white reveal-on-scroll">
+    <section class="py-5 py-lg-6 reveal-on-scroll" style="background: var(--bg-surface)">
       <div class="container text-center">
         <h2 class="fw-bold mb-5">Tại sao chọn Brevery? ✨</h2>
         <div class="row g-4">
           <div class="col-md-4">
-            <div class="feature-card bg-success-subtle p-4 p-lg-5 rounded-4 h-100 shadow-sm transition-hover">
-              <div class="icon-box bg-white text-success rounded-circle shadow-sm d-flex align-items-center justify-content-center mx-auto mb-4">
-                <PhLeaf size="40" weight="duotone" />
+            <div class="feature-magic-card feature-green h-100">
+              <div class="feature-magic-card-info">
+                <div class="icon-box bg-white text-success rounded-circle shadow-sm d-flex align-items-center justify-content-center mx-auto mb-4">
+                  <PhLeaf size="40" weight="duotone" />
+                </div>
+                <h5 class="fw-bold mb-3" style="color: var(--card-dark-text); transition: color var(--duration-slow) var(--ease-smooth);">Nguyên liệu tự nhiên</h5>
+                <p class="fst-italic small mb-0" style="color: var(--card-dark-sub); transition: color var(--duration-slow) var(--ease-smooth);">"Không chất bảo quản — không lo sức khỏe"</p>
               </div>
-              <h5 class="fw-bold mb-3">Nguyên liệu tự nhiên</h5>
-              <p class="text-secondary fst-italic small">"Không chất bảo quản — không lo sức khỏe"</p>
             </div>
           </div>
           <div class="col-md-4">
-            <div class="feature-card bg-primary-subtle p-4 p-lg-5 rounded-4 h-100 shadow-sm transition-hover">
-              <div class="icon-box bg-white text-primary rounded-circle shadow-sm d-flex align-items-center justify-content-center mx-auto mb-4">
-                <PhRocket size="40" weight="duotone" />
+            <div class="feature-magic-card feature-orange h-100">
+              <div class="feature-magic-card-info">
+                <div class="icon-box bg-white text-primary rounded-circle shadow-sm d-flex align-items-center justify-content-center mx-auto mb-4">
+                  <PhRocket size="40" weight="duotone" />
+                </div>
+                <h5 class="fw-bold mb-3" style="color: var(--card-dark-text); transition: color var(--duration-slow) var(--ease-smooth);">Giao hàng cực nhanh</h5>
+                <p class="fst-italic small mb-0" style="color: var(--card-dark-sub); transition: color var(--duration-slow) var(--ease-smooth);">"Giao trễ? Hoàn phí ship ngay lập tức"</p>
               </div>
-              <h5 class="fw-bold mb-3">Giao hàng cực nhanh</h5>
-              <p class="text-secondary fst-italic small">"Giao trễ? Hoàn phí ship ngay lập tức"</p>
             </div>
           </div>
           <div class="col-md-4">
-            <div class="feature-card bg-danger-subtle p-4 p-lg-5 rounded-4 h-100 shadow-sm transition-hover">
-              <div class="icon-box bg-white text-danger rounded-circle shadow-sm d-flex align-items-center justify-content-center mx-auto mb-4">
-                <PhHeart size="40" weight="duotone" />
+            <div class="feature-magic-card feature-yellow h-100">
+              <div class="feature-magic-card-info">
+                <div class="icon-box bg-white text-danger rounded-circle shadow-sm d-flex align-items-center justify-content-center mx-auto mb-4">
+                  <PhHeart size="40" weight="duotone" />
+                </div>
+                <h5 class="fw-bold mb-3" style="color: var(--card-dark-text); transition: color var(--duration-slow) var(--ease-smooth);">Đảm bảo hài lòng</h5>
+                <p class="fst-italic small mb-0" style="color: var(--card-dark-sub); transition: color var(--duration-slow) var(--ease-smooth);">"Không hài lòng? Hoàn 100% không hỏi"</p>
               </div>
-              <h5 class="fw-bold mb-3">Đảm bảo hài lòng</h5>
-              <p class="text-secondary fst-italic small">"Không hài lòng? Hoàn 100% không hỏi"</p>
             </div>
           </div>
         </div>
@@ -316,7 +358,7 @@
     </section>
 
     <!-- 8. GALLERY -->
-    <section class="py-5 py-lg-6 reveal-on-scroll bg-light">
+    <section class="py-5 py-lg-6 reveal-on-scroll" style="background: var(--bg-muted)">
       <div class="container text-center">
         <h3 class="fw-bold mb-4 d-flex align-items-center justify-content-center gap-2">
           <PhInstagramLogo size="32" weight="duotone" color="var(--bakery-primary)" />
@@ -364,7 +406,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted, onUnmounted, computed } from 'vue'
+import { ref, onMounted, onUnmounted, computed, nextTick } from 'vue'
 import { productApi } from '@/api/product.api'
 import ProductCard from '@/components/ProductCard.vue'
 import { 
@@ -376,22 +418,22 @@ import {
 
 // --- Stats counter strip ---
 const statStrip = ref(null)
-const stats = ref({ years: 0, customers: 0, menu: 0, minutes: 0 })
+const stats = ref({ orders: 0, revenue: 0, customers: 0, rating: 0 })
 let statsAnimated = false
 function animateStats() {
   if (statsAnimated) return
   statsAnimated = true
-  const targets = { years: 12, customers: 50000, menu: 120, minutes: 30 }
+  const targets = { orders: 25800, revenue: 990, customers: 15400, rating: 49 }
   const duration = 1600
   const start = performance.now()
   function tick(now) {
     const p = Math.min((now - start) / duration, 1)
     const ease = 1 - Math.pow(1 - p, 3)
     stats.value = {
-      years: Math.round(targets.years * ease),
+      orders: Math.round(targets.orders * ease),
+      revenue: Math.round(targets.revenue * ease),
       customers: Math.round(targets.customers * ease),
-      menu: Math.round(targets.menu * ease),
-      minutes: Math.round(targets.minutes * ease),
+      rating: Math.round(targets.rating * ease),
     }
     if (p < 1) requestAnimationFrame(tick)
   }
@@ -408,6 +450,40 @@ const faqs = [
   { q: 'Chính sách hoàn tiền như thế nào?', a: 'Nếu bạn chưa hài lòng về chất lượng sản phẩm, chúng tôi hoàn tiền 100% hoặc đổi sản phẩm mới — không cần lý do phức tạp.' },
 ]
 
+// --- Dynamic Contrast & 3D Parallax Tilt ---
+const isHeroBgDark = ref(false)
+const tiltX = ref(0)
+const tiltY = ref(0)
+const scrollY = ref(0)
+
+function handleMouseMove(e) {
+  const el = e.currentTarget
+  const rect = el.getBoundingClientRect()
+  const x = e.clientX - rect.left - rect.width / 2
+  const y = e.clientY - rect.top - rect.height / 2
+  tiltX.value = (x / rect.width) * 12
+  tiltY.value = -(y / rect.height) * 12
+}
+
+function resetTilt() {
+  tiltX.value = 0
+  tiltY.value = 0
+}
+
+function checkHeroBrightness() {
+  const heroEl = document.querySelector('.hero-section')
+  if (!heroEl) return
+  const bg = window.getComputedStyle(heroEl).backgroundColor
+  const match = bg.match(/\d+/g)
+  if (match && match.length >= 3) {
+    const r = parseInt(match[0], 10)
+    const g = parseInt(match[1], 10)
+    const b = parseInt(match[2], 10)
+    const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255
+    isHeroBgDark.value = luminance < 0.5
+  }
+}
+
 // --- Scroll progress + back-to-top ---
 const scrollProgress = ref(0)
 const showBackToTop = ref(false)
@@ -417,6 +493,7 @@ function handleScroll() {
   const height = h.scrollHeight - h.clientHeight
   scrollProgress.value = height > 0 ? (scrolled / height) * 100 : 0
   showBackToTop.value = scrolled > 500
+  scrollY.value = scrolled
 }
 function scrollToTop() { window.scrollTo({ top: 0, behavior: 'smooth' }) }
 
@@ -513,6 +590,22 @@ onMounted(async () => {
   // Scroll progress + back-to-top
   window.addEventListener('scroll', handleScroll, { passive: true })
   handleScroll()
+
+  // Dynamic Contrast Detection
+  let themeMutationObserver = null;
+  nextTick(() => {
+    checkHeroBrightness()
+    // Observe theme attribute mutation
+    const observerTarget = document.documentElement
+    themeMutationObserver = new MutationObserver(() => {
+      checkHeroBrightness()
+    })
+    themeMutationObserver.observe(observerTarget, { attributes: true, attributeFilter: ['data-theme'] })
+  })
+  
+  onUnmounted(() => {
+    if (themeMutationObserver) themeMutationObserver.disconnect()
+  })
 })
 
 onUnmounted(() => {
@@ -528,7 +621,7 @@ onUnmounted(() => {
 .reveal-on-scroll {
   opacity: 0;
   transform: translateY(30px);
-  transition: opacity 0.8s ease-out, transform 0.8s ease-out;
+  transition: opacity 0.8s var(--ease-spring), transform 0.8s var(--ease-spring);
 }
 .reveal-on-scroll.visible {
   opacity: 1;
@@ -538,7 +631,7 @@ onUnmounted(() => {
 .animate-fade-up {
   opacity: 0;
   transform: translateY(20px);
-  transition: opacity 0.6s ease-out, transform 0.6s ease-out;
+  transition: opacity 0.6s var(--ease-spring), transform 0.6s var(--ease-spring);
 }
 .animate-fade-up.visible {
   opacity: 1;
@@ -547,10 +640,11 @@ onUnmounted(() => {
 
 /* HERO SECTION */
 .hero-section {
-  background: #FDF6EE;
+  background: var(--primary-soft);
   min-height: 80vh;
   display: flex;
   align-items: center;
+  transition: background-color var(--duration-slow) var(--ease-smooth);
 }
 .bg-blob {
   position: absolute;
@@ -563,29 +657,29 @@ onUnmounted(() => {
 
 /* Buttons CTA Hover States */
 .btn-hero-primary {
-  background: #C8502A;
+  background: var(--primary);
   color: #FFFFFF;
   border: none;
-  transition: all 0.25s ease;
+  transition: all var(--duration-base) var(--ease-out);
 }
 .btn-hero-primary:hover {
-  background: #8B3210;
+  background: var(--primary-dark);
   color: #FFFFFF;
   transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(200, 80, 42, 0.4) !important;
+  box-shadow: 0 6px 20px rgba(200, 90, 50, 0.4) !important;
 }
 
 .btn-hero-secondary {
   background: transparent;
-  border: 2px solid #C8502A;
-  color: #C8502A;
-  transition: all 0.25s ease;
+  border: 2px solid var(--primary);
+  color: var(--primary);
+  transition: all var(--duration-base) var(--ease-out);
 }
 .btn-hero-secondary:hover {
-  background: #C8502A;
+  background: var(--primary);
   color: #FFFFFF;
   transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(200, 80, 42, 0.3) !important;
+  box-shadow: 0 6px 20px rgba(200, 90, 50, 0.3) !important;
 }
 
 /* Hero Right Column Visuals */
@@ -667,37 +761,76 @@ onUnmounted(() => {
   50% { transform: scale(1.5); opacity: 1; }
 }
 
-/* Floating Cards Glassmorphism */
+/* Floating Cards with Orbit animations */
 .float-card {
   z-index: 4;
-  animation: float 4s ease-in-out infinite;
-  backdrop-filter: blur(8px);
-  background: rgba(255, 255, 255, 0.85) !important;
-  border: 1px solid rgba(255, 255, 255, 0.6);
+  background: var(--bg-surface) !important;
+  border: 1px solid var(--border-light);
+  box-shadow: var(--shadow-soft);
+  transition: all 0.3s ease;
 }
-.card-1 { top: 10%; left: -5%; animation-delay: 0s; }
-.card-2 { bottom: 20%; right: -5%; animation-delay: 1s; }
-.card-3 { bottom: 5%; left: 10%; animation-delay: 2s; }
+.float-card:hover {
+  transform: scale(1.1) !important;
+  box-shadow: var(--shadow-hover);
+}
+.card-1 { 
+  top: 10%; left: -5%; 
+  animation: orbit1 8s ease-in-out infinite; 
+}
+.card-2 { 
+  bottom: 20%; right: -5%; 
+  animation: orbit2 9s ease-in-out infinite; 
+}
+.card-3 { 
+  bottom: 5%; left: 10%; 
+  animation: orbit3 10s ease-in-out infinite; 
+}
 
-@keyframes float {
-  0%, 100% { transform: translateY(0px); }
-  50% { transform: translateY(-15px); }
+@keyframes orbit1 {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  33% { transform: translate(12px, -8px) scale(1.02); }
+  66% { transform: translate(-8px, 12px) scale(0.98); }
+}
+@keyframes orbit2 {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  40% { transform: translate(-10px, -12px) scale(0.97); }
+  70% { transform: translate(12px, 8px) scale(1.03); }
+}
+@keyframes orbit3 {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  30% { transform: translate(15px, 10px) scale(1.04); }
+  60% { transform: translate(-12px, -8px) scale(0.96); }
+}
+
+/* Stagger animation for Stats count-up */
+.animate-stagger {
+  opacity: 0;
+  transform: translateY(24px);
+  transition: opacity 0.8s var(--ease-spring), transform 0.8s var(--ease-spring);
+}
+.reveal-on-scroll.visible .animate-stagger {
+  opacity: 1;
+  transform: translateY(0);
 }
 
 /* CATEGORY TABS */
 .btn-category {
-  background: white;
-  border: 1px solid rgba(200, 80, 42, 0.2);
+  background: var(--bg-surface);
+  border: 1.5px solid var(--border-color);
   color: var(--bakery-text);
-  transition: all 0.3s;
+  transition: all 0.35s var(--ease-smooth);
 }
 .btn-category:hover {
   border-color: var(--bakery-primary);
+  background: var(--primary-light);
+  color: var(--primary);
+  transform: translateY(-1px);
 }
 .btn-category.active {
   background: var(--bakery-primary);
   color: white;
   border-color: var(--bakery-primary);
+  box-shadow: 0 4px 16px -4px rgba(200, 90, 50, 0.4);
 }
 
 /* PROMO BANNERS */
@@ -768,5 +901,202 @@ onUnmounted(() => {
 .gallery-item:hover .gallery-overlay {
   background: rgba(200, 80, 42, 0.7);
   opacity: 1;
+}
+
+/* SPARKLE BUTTON */
+.sparkle-button {
+  --black-75: rgba(0, 0, 0, 0.75);
+  --border-color: rgba(255, 255, 255, 0.1);
+  --btn-glow-color: hsla(25, 80%, 50%, 0.75);
+  --bg-color: #1a0f0a;
+  
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.75rem;
+  border-radius: 9999px;
+  background-color: var(--bg-color);
+  color: #fff;
+  border: 1px solid var(--border-color);
+  position: relative;
+  overflow: visible;
+  cursor: pointer;
+  font-weight: bold;
+  text-decoration: none;
+  transition: transform 0.2s, background-color 0.3s, box-shadow 0.3s;
+  z-index: 1;
+}
+.sparkle-button:hover {
+  background-color: #261710;
+  transform: translateY(-2px);
+  box-shadow: 0 0 20px var(--btn-glow-color);
+  color: #fff;
+}
+.sparkle-button:active {
+  transform: scale(0.98);
+}
+.sparkle-button .text_button {
+  color: #FAF2E9;
+  letter-spacing: 0.05em;
+  z-index: 2;
+}
+.sparkle-button .sparkle {
+  width: 18px;
+  height: 18px;
+  z-index: 2;
+  transition: transform 0.3s ease;
+}
+.sparkle-button:hover .sparkle {
+  transform: scale(1.2) rotate(15deg);
+  animation: sparkle-pulse-hero 1.5s infinite alternate;
+}
+@keyframes sparkle-pulse-hero {
+  0% { transform: scale(1.1) rotate(0deg); }
+  100% { transform: scale(1.3) rotate(30deg); }
+}
+.sparkle-button .dots_border {
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  border-radius: 9999px;
+  border: 1px dashed rgba(255, 255, 255, 0.4);
+  pointer-events: none;
+  opacity: 0.6;
+  z-index: 0;
+  animation: rotate-border-hero 20s linear infinite;
+}
+@keyframes rotate-border-hero {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* STAT MAGIC CARDS */
+.stat-magic-card {
+  --background: linear-gradient(135deg, var(--primary) 0%, #f5e6d3 100%);
+  width: 220px;
+  height: 140px;
+  padding: 3px;
+  border-radius: 1rem;
+  overflow: visible;
+  background: var(--background);
+  position: relative;
+  z-index: 1;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  transition: transform 0.45s var(--ease-spring), box-shadow 0.45s var(--ease-smooth);
+}
+.stat-magic-card::after {
+  position: absolute;
+  content: "";
+  top: 15px; left: 0; right: 0;
+  z-index: -1;
+  height: 100%; width: 100%;
+  transform: scale(0.85);
+  filter: blur(20px);
+  background: var(--background);
+  opacity: 0.5;
+  transition: opacity 0.5s var(--ease-smooth);
+}
+.stat-magic-card:hover {
+  transform: translateY(-8px) scale(1.02);
+  box-shadow: var(--shadow-hover);
+}
+.stat-magic-card:hover::after {
+  opacity: 0;
+}
+.stat-magic-card-info {
+  background: var(--card-dark-bg);
+  color: var(--card-dark-text);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+  height: 100%;
+  border-radius: 0.7rem;
+  padding: 1rem;
+  border: 1px solid var(--card-dark-border);
+  transition: background-color var(--duration-slow) var(--ease-smooth),
+              border-color var(--duration-slow) var(--ease-smooth);
+}
+.stat-magic-card .stat-value {
+  font-size: 2rem;
+  font-weight: 800;
+  color: var(--card-dark-accent);
+  margin-bottom: 0.25rem;
+  transition: color var(--duration-slow) var(--ease-smooth);
+}
+.stat-magic-card .stat-label {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--card-dark-sub);
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  transition: color var(--duration-slow) var(--ease-smooth);
+}
+
+/* FEATURE MAGIC CARDS */
+.feature-magic-card {
+  padding: 3px;
+  border-radius: 1rem;
+  overflow: visible;
+  position: relative;
+  z-index: 1;
+  display: flex;
+  transition: transform 0.45s var(--ease-spring), box-shadow 0.45s var(--ease-smooth);
+}
+.feature-green {
+  --background: linear-gradient(135deg, #2ecc71 0%, #27ae60 100%);
+  --feature-bg: #E3F0E4;
+  --feature-text: #1a5c2a;
+  --feature-sub: #3d7c4c;
+  background: var(--background);
+}
+.feature-orange {
+  --background: linear-gradient(135deg, #ff9f43 0%, #ee5253 100%);
+  --feature-bg: #FFF0E6;
+  --feature-text: #8B3210;
+  --feature-sub: #b54f2a;
+  background: var(--background);
+}
+.feature-yellow {
+  --background: linear-gradient(135deg, #f1c40f 0%, #f39c12 100%);
+  --feature-bg: #FEF9E7;
+  --feature-text: #7d6608;
+  --feature-sub: #a38a10;
+  background: var(--background);
+}
+.feature-magic-card::after {
+  position: absolute;
+  content: "";
+  top: 15px; left: 0; right: 0;
+  z-index: -1;
+  height: 100%; width: 100%;
+  transform: scale(0.85);
+  filter: blur(20px);
+  background: var(--background);
+  opacity: 0;
+  transition: opacity 0.45s var(--ease-smooth);
+}
+.feature-magic-card:hover {
+  transform: translateY(-8px) scale(1.02);
+  box-shadow: var(--shadow-hover);
+}
+.feature-magic-card:hover::after {
+  opacity: 0.65;
+}
+.feature-magic-card-info {
+  background: var(--card-dark-bg);
+  width: 100%;
+  height: 100%;
+  border-radius: 0.75rem;
+  padding: 2.5rem 1.5rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  border: 1px solid var(--card-dark-border);
+  transition: background-color var(--duration-slow) var(--ease-smooth),
+              border-color var(--duration-slow) var(--ease-smooth);
 }
 </style>

@@ -46,6 +46,10 @@ public class Product {
     @Builder.Default
     private Integer totalSold = 0;
 
+    @Column(nullable = false)
+    @Builder.Default
+    private Integer lowStockThreshold = 10;
+
     @CreationTimestamp
     @Column(updatable = false)
     private LocalDateTime createdAt;

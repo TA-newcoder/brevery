@@ -13,6 +13,26 @@ export const useCartStore = defineStore('cart', () => {
   const totalItems = computed(() => items.value.reduce((sum, i) => sum + i.quantity, 0))
   const totalPrice = computed(() => items.value.reduce((sum, i) => sum + (i.price * i.quantity), 0))
 
+  function showCartToast(product) {
+    const productName = product.name || product.productName || 'Sản phẩm'
+    toast.success(`
+      <div style="font-family: 'DM Sans', sans-serif;">
+        <strong style="color: var(--text-main);">${productName}</strong><br/>
+        <span style="font-size: 0.9rem; color: var(--text-sub);">Đã được thêm vào giỏ hàng</span>
+        <div style="margin-top: 8px;">
+          <a href="/cart" style="background: var(--primary); color: white; padding: 4px 12px; border-radius: 99px; text-decoration: none; font-size: 0.85rem; display: inline-block;">Xem giỏ hàng →</a>
+        </div>
+      </div>
+    `, {
+      dangerouslyHTMLString: true,
+      autoClose: 2000,
+      hideProgressBar: false,
+      closeOnClick: false,
+      pauseOnHover: true,
+      icon: '✓'
+    })
+  }
+
   // ===== Guest Cart (localStorage) =====
   function getGuestCart() {
     try {
@@ -55,13 +75,13 @@ export const useCartStore = defineStore('cart', () => {
       }
       saveGuestCart(cart)
       items.value = cart
-      toast.success('Đã thêm vào giỏ hàng!')
+      showCartToast(product)
       return
     }
     try {
       await cartApi.addToCart({ variantId: product.variantId, quantity: product.quantity || 1 })
       await fetchCart()
-      toast.success('Đã thêm vào giỏ hàng!')
+      showCartToast(product)
     } catch (err) {
       toast.error(err.response?.data?.message || 'Thêm thất bại')
     }
