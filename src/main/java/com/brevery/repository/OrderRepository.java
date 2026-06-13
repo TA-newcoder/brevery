@@ -48,4 +48,12 @@ public interface OrderRepository extends JpaRepository<Order, Long>, JpaSpecific
                    "GROUP BY CAST(created_at AS DATE) " +
                    "ORDER BY CAST(created_at AS DATE) ASC", nativeQuery = true)
     java.util.List<Object[]> getRevenueChartData(@Param("startDate") LocalDateTime startDate, @Param("endDate") LocalDateTime endDate);
+
+    @Query("SELECT o FROM Order o JOIN o.orderDetails od WHERE o.user.userId = :userId AND o.status = :status AND od.product.productId = :productId ORDER BY o.createdAt DESC")
+    java.util.List<Order> findByUserAndStatusAndProduct(@Param("userId") Long userId, @Param("status") OrderStatus status, @Param("productId") Long productId);
+
+    default Optional<Order> findFirstByUserUserIdAndStatusAndOrderDetails_Product_ProductId(Long userId, OrderStatus status, Long productId) {
+        var list = findByUserAndStatusAndProduct(userId, status, productId);
+        return list.isEmpty() ? Optional.empty() : Optional.of(list.get(0));
+    }
 }

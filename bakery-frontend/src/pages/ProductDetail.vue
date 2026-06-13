@@ -70,9 +70,39 @@
       </div>
     </div>
 
-    <!-- Reviews -->
+    <!-- Reviews Section -->
     <div v-if="product" class="mt-5">
-      <h4 class="fw-bold mb-3 d-flex align-items-center gap-2"><PhChatCircle weight="bold" size="24" color="var(--bakery-primary)" /> Đánh giá ({{ product.reviewCount || 0 }})</h4>
+      <h4 class="fw-bold mb-3 d-flex align-items-center gap-2">
+        <PhChatCircle weight="bold" size="24" color="var(--bakery-primary)" /> Đánh giá ({{ product.reviewCount || 0 }})
+      </h4>
+
+      <!-- Review Form -->
+      <div v-if="authStore.isAuthenticated" class="bakery-card mb-4" style="border-left: 3px solid var(--primary)">
+        <h6 class="fw-bold mb-3">Viết đánh giá</h6>
+        <div v-if="reviewSent" class="text-success fw-semibold">✓ Cảm ơn bạn đã đánh giá!</div>
+        <form v-else @submit.prevent="submitReview">
+          <div class="mb-2">
+            <label class="form-label small fw-semibold mb-1">Đánh giá sao *</label>
+            <div class="d-flex gap-1">
+              <button v-for="i in 5" :key="i" type="button" class="btn p-0 border-0 bg-transparent"
+                @click="reviewForm.rating = i" style="cursor:pointer">
+                <PhStar :weight="i <= reviewForm.rating ? 'fill' : 'regular'" size="28"
+                  :color="i <= reviewForm.rating ? '#f5a623' : '#ccc'" />
+              </button>
+            </div>
+          </div>
+          <div class="mb-2">
+            <label class="form-label small fw-semibold mb-1">Nhận xét</label>
+            <textarea v-model="reviewForm.comment" class="bakery-input" rows="3" placeholder="Chia sẻ trải nghiệm của bạn..."></textarea>
+          </div>
+          <button type="submit" class="btn btn-bakery btn-sm" :disabled="reviewSubmitting || !reviewForm.rating">
+            {{ reviewSubmitting ? 'Đang gửi...' : 'Gửi đánh giá' }}
+          </button>
+          <span v-if="reviewError" class="text-danger small ms-2">{{ reviewError }}</span>
+        </form>
+      </div>
+
+      <!-- Review List -->
       <div v-for="r in reviews" :key="r.reviewId" class="bakery-card mb-3">
         <div class="d-flex justify-content-between">
           <div>
@@ -98,13 +128,16 @@ import { ref, onMounted, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { productApi } from '@/api/product.api'
 import { useCartStore } from '@/stores/cart.store'
+import { useAuthStore } from '@/stores/auth.store'
 import Pagination from '@/components/Pagination.vue'
 import { PhStar, PhShoppingCart, PhChatCircle, PhArrowLeft } from '@phosphor-icons/vue'
 import dayjs from 'dayjs'
+import { toast } from 'vue3-toastify'
 
 const route = useRoute()
 const router = useRouter()
 const cartStore = useCartStore()
+const authStore = useAuthStore()
 
 const product = ref(null)
 const loading = ref(true)
@@ -114,6 +147,12 @@ const qty = ref(1)
 const reviews = ref([])
 const reviewPage = ref(0)
 const reviewTotalPages = ref(0)
+
+// Review form
+const reviewForm = ref({ rating: 0, comment: '' })
+const reviewSubmitting = ref(false)
+const reviewSent = ref(false)
+const reviewError = ref('')
 
 function formatPrice(p) { return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(p || 0) }
 function formatDate(d) { return dayjs(d).format('DD/MM/YYYY') }
@@ -149,8 +188,27 @@ function handleAddToCart() {
   })
 }
 
+async function submitReview() {
+  reviewSubmitting.value = true
+  reviewError.value = ''
+  try {
+    await productApi.submitReview({
+      productId: Number(route.params.id),
+      rating: reviewForm.value.rating,
+      comment: reviewForm.value.comment,
+    })
+    reviewSent.value = true
+    toast.success('Đánh giá thành công!')
+    await fetchReviews()
+    await fetchProduct()
+  } catch (e) {
+    reviewError.value = e.response?.data?.message || 'Không thể gửi đánh giá. Bạn cần mua và nhận hàng trước.'
+  }
+  finally { reviewSubmitting.value = false }
+}
+
 onMounted(() => { fetchProduct(); fetchReviews() })
-watch(() => route.params.id, () => { fetchProduct(); fetchReviews() })
+watch(() => route.params.id, () => { fetchProduct(); fetchReviews(); reviewSent.value = false })
 </script>
 
 <style scoped>

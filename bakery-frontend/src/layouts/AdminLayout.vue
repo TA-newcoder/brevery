@@ -116,7 +116,8 @@ import { Client } from '@stomp/stompjs'
 import {
   PhChartBar, PhCake, PhPackage, PhUsers, PhHouse, PhSignOut,
   PhBell, PhBellSlash, PhUser, PhShoppingCart, PhMagnifyingGlass,
-  PhMoon, PhSun, PhGear, PhChartLine, PhClipboardText, PhStar
+  PhMoon, PhSun, PhGear, PhChartLine, PhClipboardText, PhStar,
+  PhTag, PhTicket
 } from '@phosphor-icons/vue'
 
 const authStore = useAuthStore()
@@ -130,8 +131,11 @@ const isDarkMode = ref(false)
 const menuItems = [
   { to: '/admin', icon: PhChartBar, label: 'Dashboard' },
   { to: '/admin/products', icon: PhCake, label: 'Sản phẩm' },
+  { to: '/admin/categories', icon: PhTag, label: 'Danh mục' },
   { to: '/admin/orders', icon: PhPackage, label: 'Đơn hàng' },
   { to: '/admin/users', icon: PhUsers, label: 'Người dùng' },
+  { to: '/admin/coupons', icon: PhTicket, label: 'Khuyến mãi' },
+  { to: '/admin/banners', icon: PhStar, label: 'Banner QC' },
   { to: '/admin/reports', icon: PhChartLine, label: 'Báo cáo' },
   { to: '/admin/reviews', icon: PhStar, label: 'Bình luận' },
   { to: '/admin/inventory', icon: PhClipboardText, label: 'Kho hàng' },

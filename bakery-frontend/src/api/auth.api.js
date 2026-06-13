@@ -8,4 +8,9 @@ export const authApi = {
   verifyEmail: (token) => api.get('/auth/verify-email', { params: { token } }),
   forgotPassword: (data) => api.post('/auth/forgot-password', data),
   resetPassword: (data) => api.post('/auth/reset-password', data),
+  // Profile
+  getProfile: () => api.get('/profile'),
+  updateProfile: (data) => api.put('/profile', data),
+  changePassword: (data) => api.post('/profile/change-password', data),
 }
+

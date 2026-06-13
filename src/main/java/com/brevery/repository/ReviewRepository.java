@@ -21,4 +21,6 @@ public interface ReviewRepository extends JpaRepository<Review, Long> {
     Double getAverageRatingByProductId(@Param("productId") Long productId);
 
     boolean existsByProductProductIdAndUserUserIdAndOrderOrderId(Long productId, Long userId, Long orderId);
+
+    boolean existsByUserUserIdAndProductProductIdAndOrderOrderId(Long userId, Long productId, Long orderId);
 }

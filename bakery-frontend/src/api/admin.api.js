@@ -28,6 +28,27 @@ export const adminApi = {
   getUsers: (params) => api.get('/admin/users', { params }),
   toggleUser: (userId) => api.patch(`/admin/users/${userId}/toggle`),
 
+  // Categories
+  getCategories: () => api.get('/admin/categories'),
+  createCategory: (data) => api.post('/admin/categories', data),
+  updateCategory: (id, data) => api.put(`/admin/categories/${id}`, data),
+  toggleCategory: (id) => api.patch(`/admin/categories/${id}/toggle`),
+  deleteCategory: (id) => api.delete(`/admin/categories/${id}`),
+
+  // Coupons
+  getCoupons: () => api.get('/admin/coupons'),
+  createCoupon: (data) => api.post('/admin/coupons', data),
+  updateCoupon: (id, data) => api.put(`/admin/coupons/${id}`, data),
+  toggleCoupon: (id) => api.patch(`/admin/coupons/${id}/toggle`),
+  deleteCoupon: (id) => api.delete(`/admin/coupons/${id}`),
+
+  // Banners
+  getBanners: () => api.get('/admin/banners'),
+  createBanner: (data) => api.post('/admin/banners', data),
+  updateBanner: (id, data) => api.put(`/admin/banners/${id}`, data),
+  toggleBanner: (id) => api.patch(`/admin/banners/${id}/toggle`),
+  deleteBanner: (id) => api.delete(`/admin/banners/${id}`),
+
   // Analytics
   getSummary: () => api.get('/admin/analytics/summary'),
   getRevenueChart: (period) => api.get('/admin/analytics/revenue-chart', { params: { period } }),
@@ -36,3 +57,4 @@ export const adminApi = {
   getAiInsight: () => api.get('/admin/analytics/insight'),
   triggerAiInsight: () => api.post('/admin/analytics/insight/trigger'),
 }
+

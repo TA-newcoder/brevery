@@ -53,6 +53,7 @@
               <span class="d-none d-lg-inline ms-2 user-name">{{ authStore.userName }}</span>
             </button>
             <ul class="dropdown-menu dropdown-menu-end bakery-dropdown">
+              <li><router-link to="/profile" class="dropdown-item d-flex align-items-center gap-2"><PhUser size="18" weight="bold"/> Hồ sơ</router-link></li>
               <li><router-link to="/orders" class="dropdown-item d-flex align-items-center gap-2"><PhPackage size="18" weight="bold"/> Đơn hàng</router-link></li>
               <li v-if="authStore.isAdmin"><router-link to="/admin" class="dropdown-item d-flex align-items-center gap-2"><PhGear size="18" weight="bold"/> Admin Panel</router-link></li>
               <li><hr class="dropdown-divider" /></li>
@@ -136,6 +137,10 @@
 
     <!-- CONTACT FLOATING BUTTONS -->
     <div class="contact-floating-group d-flex flex-column gap-2" :class="{ 'mobile-expanded': contactExpanded }">
+      <router-link to="/contact" class="contact-btn hotline shadow-sm" style="background:var(--primary)" title="Liên hệ">
+        <PhEnvelope size="20" weight="fill" style="flex-shrink: 0;" />
+        <span class="contact-text">Gửi tin nhắn</span>
+      </router-link>
       <a href="tel:0705230644" class="contact-btn hotline shadow-sm" title="Gọi Hotline: 0705 230 644">
         <PhPhone size="20" weight="fill" style="flex-shrink: 0;" />
         <span class="contact-text">0705 230 644</span>
@@ -185,14 +190,15 @@
               <li><router-link to="/">Trang chủ</router-link></li>
               <li><router-link to="/products">Sản phẩm</router-link></li>
               <li><router-link to="/track">Tra cứu đơn</router-link></li>
+              <li><router-link to="/contact">Liên hệ</router-link></li>
             </ul>
           </div>
           <div class="col-6 col-lg-3">
             <h6 class="text-white mb-3">Liên hệ</h6>
             <ul class="list-unstyled footer-links">
-              <li class="d-flex align-items-center gap-2"><PhMapPin size="18" /> 123 Nguyễn Huệ, Q.1, HCM</li>
-              <li class="d-flex align-items-center gap-2"><PhPhone size="18" /> 0909 123 456</li>
-              <li class="d-flex align-items-center gap-2"><PhEnvelope size="18" /> hello@brevery.vn</li>
+              <li class="d-flex align-items-center gap-2"><PhMapPin size="18" /> 12 Nguyễn Văn Bảo, P.4, Q.Gò Vấp</li>
+              <li class="d-flex align-items-center gap-2"><PhPhone size="18" /> 0705 230 644</li>
+              <li class="d-flex align-items-center gap-2"><PhEnvelope size="18" /> support@brevery.vn</li>
             </ul>
           </div>
           <div class="col-lg-3">

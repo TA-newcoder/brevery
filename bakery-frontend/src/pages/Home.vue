@@ -190,45 +190,33 @@
       </div>
     </section>
 
-    <!-- 4. BANNER DANH MỤC -->
-    <section class="container py-5 reveal-on-scroll">
+    <!-- 4. BANNER QUẢNG CÁO -->
+    <section v-if="activeBanners.length > 0" class="container py-5 reveal-on-scroll">
       <div class="row g-4 banner-grid" style="height: 320px;">
-        <!-- Banner Trái (60%) -->
-        <div class="col-md-7 h-100">
-          <div class="promo-banner w-100 h-100 rounded-4 overflow-hidden position-relative shadow-sm" style="background: url('/images/banner.png') center/cover;">
+        <!-- Banner Trái (Lớn) -->
+        <div class="col-md-7 h-100" v-if="activeBanners[0]">
+          <div class="promo-banner w-100 h-100 rounded-4 overflow-hidden position-relative shadow-sm" :style="{ background: `url(${activeBanners[0].imageUrl}) center/cover` }">
             <div class="banner-overlay position-absolute w-100 h-100" style="background: linear-gradient(to top, rgba(0,0,0,0.8), transparent); bottom: 0;"></div>
             <div class="position-absolute bottom-0 p-4 w-100 text-white z-1">
               <h3 class="fw-bold mb-2 d-flex align-items-center">
-                <PhCake size="24" weight="fill" color="#fff" class="me-2" /> Bánh Sinh Nhật
+                 {{ activeBanners[0].title }}
               </h3>
-              <p class="mb-3 text-white-50">Đặt trước 24h — Miễn phí giao hàng</p>
-              <router-link to="/products?categoryId=1" class="btn btn-light rounded-pill px-4 fw-bold btn-sm shadow d-inline-flex align-items-center gap-1">
-                Đặt ngay <PhArrowRight size="16" weight="bold" />
-              </router-link>
+              <a v-if="activeBanners[0].link" :href="activeBanners[0].link" class="btn btn-light rounded-pill px-4 fw-bold btn-sm shadow d-inline-flex align-items-center gap-1">
+                Xem ngay <PhArrowRight size="16" weight="bold" />
+              </a>
             </div>
           </div>
         </div>
         
-        <!-- Banner Phải (40%) -->
-        <div class="col-md-5 h-100 d-flex flex-column gap-4">
-          <!-- Banner Trên -->
-          <div class="promo-banner w-100 rounded-4 overflow-hidden position-relative shadow-sm flex-grow-1" style="background: url('/images/cake.png') center/cover;">
-            <div class="banner-overlay position-absolute w-100 h-100" style="background: rgba(0,0,0,0.5);"></div>
-            <div class="position-absolute w-100 h-100 d-flex flex-column justify-content-center align-items-center text-white z-1">
-              <h4 class="fw-bold mb-1 d-flex align-items-center">
-                <PhCookie size="20" weight="fill" color="#fff" class="me-2" /> Bánh Ngọt
+        <!-- Các Banner Phải (Nhỏ) -->
+        <div class="col-md-5 h-100 d-flex flex-column gap-4" v-if="activeBanners.length > 1">
+          <div v-for="b in activeBanners.slice(1, 3)" :key="b.bannerId" class="promo-banner w-100 rounded-4 overflow-hidden position-relative shadow-sm flex-grow-1" :style="{ background: `url(${b.imageUrl}) center/cover` }">
+            <div class="banner-overlay position-absolute w-100 h-100" style="background: rgba(0,0,0,0.4);"></div>
+            <a v-if="b.link" :href="b.link" class="position-absolute w-100 h-100 text-decoration-none"></a>
+            <div class="position-absolute w-100 h-100 d-flex flex-column justify-content-center align-items-center text-white z-1 pointer-events-none">
+              <h4 class="fw-bold mb-1 px-3 text-center text-shadow-sm">
+                {{ b.title }}
               </h4>
-              <p class="small mb-0 text-white-50">Tươi làm mỗi sáng</p>
-            </div>
-          </div>
-          <!-- Banner Dưới -->
-          <div class="promo-banner w-100 rounded-4 overflow-hidden position-relative shadow-sm flex-grow-1" style="background: url('/images/drink.png') center/cover;">
-            <div class="banner-overlay position-absolute w-100 h-100" style="background: rgba(0,0,0,0.5);"></div>
-            <div class="position-absolute w-100 h-100 d-flex flex-column justify-content-center align-items-center text-white z-1">
-              <h4 class="fw-bold mb-1 d-flex align-items-center">
-                <PhCoffee size="20" weight="fill" color="#fff" class="me-2" /> Đồ Uống
-              </h4>
-              <p class="small mb-0 text-white-50">Trà sữa · Cà phê · Sinh tố</p>
             </div>
           </div>
         </div>
@@ -547,7 +535,16 @@ function nextSlide() {
 // --- Intersection Observer for Scroll Animations ---
 let observer = null
 
+// --- Active Banners ---
+const activeBanners = ref([])
+
 onMounted(async () => {
+  // Fetch Banners
+  try {
+    const bannerRes = await productApi.getBanners()
+    activeBanners.value = bannerRes.data.data || []
+  } catch { /* silent */ }
+
   // Fetch Products
   try {
     const { data } = await productApi.getTopSelling(12)

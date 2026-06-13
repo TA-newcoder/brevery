@@ -48,6 +48,9 @@ public class SecurityConfig {
                     // PUBLIC — Contact form
                     .requestMatchers(HttpMethod.POST, "/api/v1/contact").permitAll()
 
+                    // PUBLIC — Banners
+                    .requestMatchers("/api/v1/banners/**").permitAll()
+
                     // PUBLIC — Swagger & H2
                     .requestMatchers(
                             "/swagger-ui/**",
@@ -63,11 +66,12 @@ public class SecurityConfig {
                     // ADMIN only
                     .requestMatchers("/api/v1/admin/**").hasRole("ADMIN")
 
-                    // USER hoặc ADMIN — Cart, Orders, AI Chat, Profile
+                    // USER hoặc ADMIN — Cart, Orders, AI Chat, Profile, Reviews
                     .requestMatchers("/api/v1/cart/**").hasAnyRole("USER", "ADMIN")
                     .requestMatchers("/api/v1/orders/**").hasAnyRole("USER", "ADMIN")
                     .requestMatchers("/api/v1/ai/**").hasAnyRole("USER", "ADMIN")
                     .requestMatchers("/api/v1/profile/**").hasAnyRole("USER", "ADMIN")
+                    .requestMatchers("/api/v1/reviews/**").hasAnyRole("USER", "ADMIN")
                     .requestMatchers("/api/v1/addresses/**").hasAnyRole("USER", "ADMIN")
 
                     // Còn lại phải authenticated
