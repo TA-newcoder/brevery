@@ -45,6 +45,7 @@ public class AiService {
 
     private static final String RATE_LIMIT_PREFIX = "rate:ai:chat:";
 
+    @org.springframework.transaction.annotation.Transactional(readOnly = true)
     public String chat(String message, String clientIp, boolean isAdmin) {
         log.info("AI Chatbot (Yuni) received message: {} from IP: {} (isAdmin: {})", message, clientIp, isAdmin);
 
@@ -70,7 +71,7 @@ public class AiService {
         }
 
         if (!StringUtils.hasText(aiApiKey)) {
-            log.warn("Anthropic API key is not configured. Falling back to Local Engine.");
+            log.warn("Gemini API key is not configured. Falling back to Local Engine.");
             return generateLocalFallback(message, isAdmin);
         }
 
@@ -79,61 +80,140 @@ public class AiService {
             
             SimpleClientHttpRequestFactory requestFactory = new SimpleClientHttpRequestFactory();
             requestFactory.setConnectTimeout(15000);
-            requestFactory.setReadTimeout(25000);
+            requestFactory.setReadTimeout(40000);
             RestTemplate restTemplate = new RestTemplate(requestFactory);
 
-            String url = "https://api.anthropic.com/v1/messages";
+            String url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-pro-latest:generateContent?key=" + aiApiKey;
 
             HttpHeaders headers = new HttpHeaders();
             headers.setContentType(MediaType.APPLICATION_JSON);
-            headers.set("x-api-key", aiApiKey);
-            headers.set("anthropic-version", "2023-06-01");
 
             ObjectNode payloadNode = objectMapper.createObjectNode();
-            payloadNode.put("model", "claude-sonnet-4-20250514");
-            payloadNode.put("max_tokens", 1500);
-            payloadNode.put("system", systemPrompt);
-
-            ArrayNode messagesArray = payloadNode.putArray("messages");
-            ObjectNode userMessage = messagesArray.addObject();
-            userMessage.put("role", "user");
-            userMessage.put("content", message);
+            
+            // System instructions
+            ObjectNode systemInstruction = payloadNode.putObject("system_instruction");
+            ArrayNode sysParts = systemInstruction.putArray("parts");
+            sysParts.addObject().put("text", systemPrompt);
+            
+            // User message
+            ArrayNode contentsArray = payloadNode.putArray("contents");
+            ObjectNode contentObj = contentsArray.addObject();
+            contentObj.put("role", "user");
+            ArrayNode partsArray = contentObj.putArray("parts");
+            partsArray.addObject().put("text", message);
 
             HttpEntity<String> entity = new HttpEntity<>(objectMapper.writeValueAsString(payloadNode), headers);
 
-            log.info("Calling Anthropic Claude API for Yuni {}...", isAdmin ? "Admin" : "Customer");
+            log.info("Calling Google Gemini API for Yuni {}...", isAdmin ? "Admin" : "Customer");
             ResponseEntity<String> responseEntity = restTemplate.exchange(url, HttpMethod.POST, entity, String.class);
 
             if (responseEntity.getStatusCode() == HttpStatus.OK && responseEntity.getBody() != null) {
                 JsonNode rootNode = objectMapper.readTree(responseEntity.getBody());
-                JsonNode contentNode = rootNode.path("content");
-                if (contentNode.isArray() && contentNode.size() > 0) {
-                    return contentNode.get(0).path("text").asText().trim();
+                JsonNode candidates = rootNode.path("candidates");
+                if (candidates.isArray() && candidates.size() > 0) {
+                    JsonNode parts = candidates.get(0).path("content").path("parts");
+                    if (parts.isArray() && parts.size() > 0) {
+                        String replyText = parts.get(0).path("text").asText().trim();
+                        return formatMarkdownAndCards(replyText, isAdmin);
+                    }
                 }
             }
 
-            log.warn("Anthropic response was empty. Using fallback.");
+            log.warn("Gemini response was empty. Using fallback.");
             return generateLocalFallback(message, isAdmin);
 
         } catch (Exception e) {
-            log.error("Failed to connect to Anthropic API", e);
+            log.error("Failed to connect to Gemini API", e);
             return generateLocalFallback(message, isAdmin);
         }
+    }
+
+    private String formatMarkdownAndCards(String text, boolean isAdmin) {
+        if (!isAdmin) {
+            java.util.regex.Matcher matcher = java.util.regex.Pattern.compile("\\[PRODUCT_ID:(\\d+)\\]").matcher(text);
+            StringBuffer sb = new StringBuffer();
+            while (matcher.find()) {
+                try {
+                    Long productId = Long.parseLong(matcher.group(1));
+                    Product p = productRepository.findById(productId).orElse(null);
+                    if (p != null) {
+                        String imageUrl = "/images/placeholder.png";
+                        if (p.getImages() != null && !p.getImages().isEmpty()) {
+                            imageUrl = p.getImages().get(0).getImageUrl();
+                        }
+                        String price = "Liên hệ";
+                        if (p.getVariants() != null && !p.getVariants().isEmpty()) {
+                            price = String.format("%,.0fđ", p.getVariants().get(0).getPrice());
+                        }
+                        
+                        String html = "<div class=\"d-flex align-items-center gap-3 p-2 mt-2 mb-2 border rounded-3\" style=\"background: #fff; box-shadow: 0 2px 8px rgba(0,0,0,0.05); max-width: 280px;\">" +
+                                "<img src=\"" + imageUrl + "\" style=\"width: 60px; height: 60px; object-fit: cover; border-radius: 8px; flex-shrink: 0;\" />" +
+                                "<div style=\"flex-grow: 1; min-width: 0;\">" +
+                                "<div class=\"fw-bold text-truncate\" style=\"color: #E07340; font-size: 0.85rem;\" title=\"" + p.getName() + "\">" + p.getName() + "</div>" +
+                                "<div class=\"d-flex align-items-center justify-content-between mt-1\">" +
+                                "<span style=\"color: #1a0f0a; font-weight: bold; font-size: 0.9rem;\">" + price + "</span>" +
+                                "<a href=\"/products/" + p.getProductId() + "\" target=\"_blank\" class=\"btn btn-sm\" style=\"background: #E07340; color: white; padding: 2px 8px; font-size: 0.75rem; border-radius: 4px;\">Xem</a>" +
+                                "</div>" +
+                                "</div>" +
+                                "</div>";
+                        matcher.appendReplacement(sb, java.util.regex.Matcher.quoteReplacement(html));
+                    } else {
+                        matcher.appendReplacement(sb, "");
+                    }
+                } catch (Exception e) {
+                    matcher.appendReplacement(sb, "");
+                }
+            }
+            matcher.appendTail(sb);
+            text = sb.toString();
+        }
+        
+        // Convert basic markdown
+        text = text.replaceAll("\\*\\*(.*?)\\*\\*", "<strong>$1</strong>");
+        text = text.replaceAll("\\*(.*?)\\*", "<em>$1</em>");
+        text = text.replace("\n", "<br>");
+        return text;
     }
 
     private String buildCustomerPrompt(String message) {
         List<Product> products = productRepository.findAll().stream().filter(Product::getIsAvailable).collect(Collectors.toList());
         StringBuilder sb = new StringBuilder();
-        sb.append("Bạn là Yuni, trợ lý ảo cực kỳ dễ thương, ngọt ngào của cửa hàng Brevery (Bakery & Beverage).\n");
+        sb.append("Bạn là Yuni, trợ lý ảo cực kỳ dễ thương, ngọt ngào của cửa hàng Brevery — chuyên phân phối bánh kẹo đóng gói và nước giải khát đóng chai/lon.\n");
         sb.append("Chào mặc định: 'Xin chào! Mình là Yuni, trợ lý của Brevery 🌸 Mình có thể giúp gì cho bạn?'\n");
-        sb.append("Ngôn ngữ: Tiếng Việt, xưng 'mình' gọi 'bạn', dùng icon dễ thương.\n");
-        sb.append("Nhiệm vụ: Tư vấn sản phẩm, gợi ý món, tra cứu đơn hàng, hướng dẫn.\n");
-        sb.append("Nếu khách phàn nàn hoặc vấn đề phức tạp, hướng dẫn họ liên hệ Zalo shop qua số 0909000111.\n\n");
+        sb.append("Ngôn ngữ: Tiếng Việt, xưng 'mình' gọi 'bạn', dùng icon dễ thương.\n\n");
         
-        sb.append("Danh sách thực đơn hiện có:\n");
-        for (Product p : products.stream().limit(15).collect(Collectors.toList())) {
-            sb.append("- ").append(p.getName()).append(": ").append(p.getDescription()).append("\n");
+        sb.append("NHIỆM VỤ QUAN TRỌNG:\n");
+        sb.append("1. Tư vấn sản phẩm CỤ THỂ dựa trên yêu cầu khách (vị, độ ngọt, giá, mục đích sử dụng)\n");
+        sb.append("2. Khi gợi ý, PHẢI đề cập TÊN SẢN PHẨM, GIÁ, và ĐẶC BIỆT thêm mã [PRODUCT_ID:id] ngay phía sau để hệ thống tự động hiển thị hình ảnh (ví dụ: Bánh quy Danisa [PRODUCT_ID:1])\n");
+        sb.append("3. Đọc kỹ phần MÔ TẢ sản phẩm bên dưới để biết hương vị, độ ngọt, thành phần\n");
+        sb.append("4. Nếu khách hỏi 'ít ngọt', 'không ngọt' → lọc sản phẩm có ghi 'ÍT NGỌT' hoặc 'KHÔNG NGỌT' trong mô tả\n");
+        sb.append("5. Nếu khách phàn nàn hoặc vấn đề phức tạp, hướng dẫn họ liên hệ hotline 0705 230 644\n");
+        sb.append("6. Trả lời dưới dạng danh sách, CÓ CẤU TRÚC, dùng icon và bullet points\n\n");
+        
+        sb.append("═══════════════════════════════════════\n");
+        sb.append("📋 DANH SÁCH SẢN PHẨM HIỆN CÓ:\n");
+        sb.append("═══════════════════════════════════════\n\n");
+        
+        for (Product p : products) {
+            sb.append("🔹 [PRODUCT_ID:").append(p.getProductId()).append("] ").append(p.getName());
+            sb.append(" [").append(p.getCategory().getName()).append("]");
+            // Include price from variants
+            if (p.getVariants() != null && !p.getVariants().isEmpty()) {
+                sb.append(" — Giá: ");
+                for (int i = 0; i < p.getVariants().size(); i++) {
+                    ProductVariant v = p.getVariants().get(i);
+                    sb.append(v.getSize()).append(": ").append(String.format("%,.0f", v.getPrice())).append("đ");
+                    if (i < p.getVariants().size() - 1) sb.append(", ");
+                }
+            }
+            sb.append("\n   Mô tả: ").append(p.getDescription()).append("\n\n");
         }
+        
+        sb.append("═══════════════════════════════════════\n");
+        sb.append("Địa chỉ cửa hàng: 12 Nguyễn Văn Bảo, Phường 4, Q.Gò Vấp, TP.HCM\n");
+        sb.append("Hotline: 0705 230 644\n");
+        sb.append("Giờ mở cửa: T2-CN, 7:00 - 22:00\n");
+        sb.append("Freeship cho đơn từ 500.000đ nội thành HCM\n");
         
         if (message.matches(".*(đơn hàng|BRV-).*") || message.contains("@")) {
             sb.append("\nMột số đơn hàng gần đây để bạn tra cứu:\n");
@@ -237,16 +317,23 @@ public class AiService {
 
         // --- Build prompt ---
         StringBuilder sb = new StringBuilder();
-        sb.append("Bạn là Yuni Admin, trợ lý quản lý AI cao cấp của cửa hàng Brevery (Bakery & Beverage).\n\n");
-        sb.append("PHONG CÁCH:\n");
+        sb.append("Bạn là Yuni Admin, trợ lý quản lý AI cao cấp của cửa hàng Brevery — chuyên phân phối bánh kẹo đóng gói và nước giải khát đóng chai/lon.\n\n");
+        sb.append("PHONG CÁCH BẮT BUỘC:\n");
         sb.append("- Xưng: 'em' hoặc 'Yuni', gọi admin là 'sếp'\n");
         sb.append("- Ngôn ngữ: Tiếng Việt, chuyên nghiệp nhưng thân thiện và nhiệt huyết\n");
-        sb.append("- Trả lời ngắn gọn, có cấu trúc rõ ràng, dùng icon phù hợp\n");
-        sb.append("- Khi trình bày số liệu, dùng bảng hoặc bullet points\n");
-        sb.append("- Luôn kết thúc bằng gợi ý hành động cụ thể nếu có thể\n\n");
+        sb.append("- Trả lời CÓ CẤU TRÚC RÕ RÀNG: dùng tiêu đề (##, ###), bullet points, icon phù hợp\n");
+        sb.append("- Khi trình bày số liệu, dùng bullet points và in đậm số quan trọng\n");
+        sb.append("- LUÔN LUÔN đưa ra phân tích chủ động, nhận xét xu hướng, và gợi ý hành động cụ thể\n");
+        sb.append("- Nếu phát hiện vấn đề (tỷ lệ huỷ cao, tồn kho thấp, doanh thu giảm), phải CẢNH BÁO rõ ràng\n\n");
+        
+        sb.append("VAI TRÒ CỦA BẠN:\n");
+        sb.append("1. PHÂN TÍCH GIA (Business Analyst): Đọc số liệu, phát hiện xu hướng tăng/giảm, so sánh các giai đoạn\n");
+        sb.append("2. CỐ VẤN CHIẾN LƯỢC: Đưa ra lời khuyên kinh doanh dựa trên dữ liệu (VD: nên chạy khuyến mãi, nhập thêm hàng, v.v.)\n");
+        sb.append("3. CẢNH BÁO RỦI RO: Chủ động báo ngay nếu phát hiện vấn đề nghiêm trọng (hết hàng, đơn huỷ nhiều, đánh giá kém)\n");
+        sb.append("4. GỢI Ý HÀNH ĐỘNG: Mỗi câu trả lời phải kết thúc bằng ít nhất 2-3 hành động cụ thể sếp nên làm NGAY\n\n");
         
         sb.append("═══════════════════════════════════════\n");
-        sb.append("📊 DỮ LIỆU KINH DOANH THỰC TẾ:\n");
+        sb.append("📊 DỮ LIỆU KINH DOANH THỰC TẾ (CẬP NHẬT REAL-TIME):\n");
         sb.append("═══════════════════════════════════════\n\n");
         
         sb.append("💰 DOANH THU:\n");
@@ -257,7 +344,17 @@ public class AiService {
         if (lastMonthRevenue.compareTo(BigDecimal.ZERO) > 0) {
             BigDecimal growth = monthRevenue.subtract(lastMonthRevenue).multiply(BigDecimal.valueOf(100))
                     .divide(lastMonthRevenue, 1, RoundingMode.HALF_UP);
-            sb.append("- So với tháng trước: ").append(growth.compareTo(BigDecimal.ZERO) >= 0 ? "+" : "").append(growth).append("%\n");
+            sb.append("- Tăng trưởng so tháng trước: ").append(growth.compareTo(BigDecimal.ZERO) >= 0 ? "+" : "").append(growth).append("%\n");
+        }
+        
+        // Average order value
+        if (completedOrders > 0) {
+            BigDecimal avgOrderValue = allOrders.stream()
+                .filter(o -> o.getStatus() == OrderStatus.COMPLETED)
+                .map(Order::getTotalAmount)
+                .reduce(BigDecimal.ZERO, BigDecimal::add)
+                .divide(BigDecimal.valueOf(completedOrders), 0, RoundingMode.HALF_UP);
+            sb.append("- Giá trị đơn trung bình (AOV): ").append(String.format("%,.0f VNĐ", avgOrderValue)).append("\n");
         }
         
         sb.append("\n📦 ĐƠN HÀNG (tổng ").append(totalOrders).append(" đơn):\n");
@@ -273,6 +370,19 @@ public class AiService {
         for (int i = 0; i < topSelling.size(); i++) {
             Product p = topSelling.get(i);
             sb.append(i + 1).append(". ").append(p.getName()).append(" — Đã bán: ").append(p.getTotalSold() == null ? 0 : p.getTotalSold()).append("\n");
+        }
+        
+        // Bottom selling
+        List<Product> bottomSelling = allProducts.stream()
+                .filter(Product::getIsAvailable)
+                .sorted((a, b) -> (a.getTotalSold() == null ? 0 : a.getTotalSold()) - (b.getTotalSold() == null ? 0 : b.getTotalSold()))
+                .limit(3).collect(Collectors.toList());
+        if (!bottomSelling.isEmpty()) {
+            sb.append("\n📉 SẢN PHẨM BÁN CHẬM NHẤT:\n");
+            for (int i = 0; i < bottomSelling.size(); i++) {
+                Product p = bottomSelling.get(i);
+                sb.append(i + 1).append(". ").append(p.getName()).append(" — Chỉ bán: ").append(p.getTotalSold() == null ? 0 : p.getTotalSold()).append("\n");
+            }
         }
         
         sb.append("\n🏪 KHO HÀNG (").append(totalProducts).append(" sản phẩm):\n");
@@ -301,8 +411,15 @@ public class AiService {
         }
         
         sb.append("\n═══════════════════════════════════════\n");
-        sb.append("Hãy trả lời câu hỏi của sếp dựa trên dữ liệu trên. Tự tin, chuyên nghiệp, và luôn đưa ra gợi ý hành động cụ thể.\n");
-        sb.append("Nếu sếp hỏi ngoài phạm vi dữ liệu, hãy nói rõ 'Em chưa có dữ liệu về phần này' thay vì bịa số liệu.\n");
+        sb.append("YÊU CẦU TRẢ LỜI:\n");
+        sb.append("1. Nếu sếp yêu cầu 'phân tích tổng quan' hoặc đây là lần đầu tiên trong phiên, hãy TỰ ĐỘNG phân tích toàn bộ dữ liệu trên và đưa ra:\n");
+        sb.append("   a. Tóm tắt tình hình kinh doanh (doanh thu, đơn hàng, xu hướng)\n");
+        sb.append("   b. Điểm mạnh và điểm yếu\n");
+        sb.append("   c. Cảnh báo rủi ro (nếu có)\n");
+        sb.append("   d. 3 hành động ưu tiên cần làm ngay hôm nay\n");
+        sb.append("2. Trả lời câu hỏi của sếp dựa trên dữ liệu thực tế ở trên. Tự tin, chuyên nghiệp.\n");
+        sb.append("3. Nếu sếp hỏi ngoài phạm vi dữ liệu, hãy nói rõ 'Em chưa có dữ liệu về phần này' thay vì bịa số liệu.\n");
+        sb.append("4. Luôn kết thúc bằng câu hỏi gợi mở để tiếp tục hội thoại.\n");
         
         return sb.toString();
     }
@@ -334,10 +451,25 @@ public class AiService {
                 }
             }
             
-            sb.append("\n💡 *Cấu hình API key Anthropic để Yuni phân tích chi tiết và thông minh hơn!*");
+            sb.append("\n*Mẹo: Hệ thống AI đang tạm thời gián đoạn do quá tải. Xin vui lòng thử lại sau ít phút!*");
             return sb.toString();
         } else {
-            return "Xin chào! Mình là Yuni, trợ lý của Brevery 🌸 Hiện tại hệ thống phản hồi tự động đang nâng cấp. Bạn vui lòng liên hệ Zalo 0909000111 để được hỗ trợ nhanh nhất nhé!";
+            String lowerMsg = message.toLowerCase();
+            if (lowerMsg.contains("chào") || lowerMsg.contains("hi") || lowerMsg.contains("hello")) {
+                return "Chào bạn! Mình là Yuni 🌸. Bạn cần mình tư vấn về bánh kẹo hay đồ uống ạ?";
+            } else if (lowerMsg.contains("giá") || lowerMsg.contains("bao nhiêu")) {
+                return "Bên mình có rất nhiều mức giá khác nhau tùy thuộc vào loại sản phẩm. Thường nước giải khát giao động từ 15k - 50k, còn bánh kẹo đóng hộp từ 30k - 200k ạ. Bạn muốn xem loại nào cụ thể không?";
+            } else if (lowerMsg.contains("giao hàng") || lowerMsg.contains("ship")) {
+                return "Brevery có giao hàng tận nơi tại TP.HCM ạ. Phí ship sẽ tùy thuộc vào khoảng cách, nhưng freeship cho đơn từ 500k nhé! 🚚";
+            } else if (lowerMsg.contains("bánh") || lowerMsg.contains("kẹo")) {
+                return "Brevery có các dòng bánh quy bơ, bánh xốp đóng hộp cao cấp nhập khẩu và nội địa. Rất thích hợp để nhâm nhi cùng trà hoặc làm quà tặng. Bạn ghé trang Sản phẩm xem nhé! 🍪";
+            } else if (lowerMsg.contains("nước") || lowerMsg.contains("trà") || lowerMsg.contains("cafe") || lowerMsg.contains("cà phê")) {
+                return "Về đồ uống, bên mình phân phối các loại nước khoáng, nước trái cây đóng lon và trà sữa đóng chai vô cùng tiện lợi. Đảm bảo date luôn mới nhất! 🥤";
+            } else if (lowerMsg.contains("cửa hàng") || lowerMsg.contains("địa chỉ") || lowerMsg.contains("ở đâu")) {
+                return "Brevery hiện có trụ sở chính tại 12 Nguyễn Văn Bảo, Phường 4, Gò Vấp, TP.HCM ạ. Rất mong được đón tiếp bạn! 🏠";
+            } else {
+                return "Cảm ơn bạn đã nhắn tin cho Brevery! 🌸 Yuni đang trong quá trình học hỏi thêm nên chưa hiểu rõ ý bạn. Bạn có thể nói rõ hơn hoặc gọi trực tiếp hotline 0705 230 644 nhé!";
+            }
         }
     }
 }

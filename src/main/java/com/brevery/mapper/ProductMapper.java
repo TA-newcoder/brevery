@@ -21,16 +21,22 @@ public interface ProductMapper {
     @Mapping(target = "primaryImageUrl", source = "images", qualifiedByName = "getPrimaryImageUrl")
     @Mapping(target = "minPrice", source = "variants", qualifiedByName = "getMinPrice")
     @Mapping(target = "maxPrice", source = "variants", qualifiedByName = "getMaxPrice")
+    @Mapping(target = "minSalePrice", source = "variants", qualifiedByName = "getMinSalePrice")
     @Mapping(target = "avgRating", source = "reviews", qualifiedByName = "getAvgRating")
     @Mapping(target = "reviewCount", source = "reviews", qualifiedByName = "getReviewCount")
+    @Mapping(target = "defaultVariantId", source = "variants", qualifiedByName = "getDefaultVariantId")
+    @Mapping(target = "hasMultipleVariants", source = "variants", qualifiedByName = "getHasMultipleVariants")
+    @Mapping(target = "totalStock", source = "variants", qualifiedByName = "getTotalStock")
     ProductListDTO toListDTO(Product product);
 
     @Mapping(target = "categoryName", source = "category.name")
     @Mapping(target = "categoryId", source = "category.categoryId")
     @Mapping(target = "minPrice", source = "variants", qualifiedByName = "getMinPrice")
     @Mapping(target = "maxPrice", source = "variants", qualifiedByName = "getMaxPrice")
+    @Mapping(target = "minSalePrice", source = "variants", qualifiedByName = "getMinSalePrice")
     @Mapping(target = "avgRating", source = "reviews", qualifiedByName = "getAvgRating")
     @Mapping(target = "reviewCount", source = "reviews", qualifiedByName = "getReviewCount")
+    @Mapping(target = "totalStock", source = "variants", qualifiedByName = "getTotalStock")
     ProductDetailDTO toDetailDTO(Product product);
 
     ProductDetailDTO.VariantDTO toVariantDTO(ProductVariant variant);
@@ -70,6 +76,16 @@ public interface ProductMapper {
                 .orElse(BigDecimal.ZERO);
     }
 
+    @Named("getMinSalePrice")
+    default BigDecimal getMinSalePrice(List<ProductVariant> variants) {
+        if (variants == null || variants.isEmpty()) return null;
+        return variants.stream()
+                .filter(v -> v.getSalePrice() != null)
+                .map(ProductVariant::getSalePrice)
+                .min(BigDecimal::compareTo)
+                .orElse(null);
+    }
+
     @Named("getAvgRating")
     default Double getAvgRating(List<Review> reviews) {
         if (reviews == null || reviews.isEmpty()) return 0.0;
@@ -86,5 +102,25 @@ public interface ProductMapper {
         return reviews.stream()
                 .filter(r -> "APPROVED".equals(r.getStatus()))
                 .count();
+    }
+
+    @Named("getDefaultVariantId")
+    default Long getDefaultVariantId(List<ProductVariant> variants) {
+        if (variants == null || variants.isEmpty()) return null;
+        return variants.get(0).getVariantId();
+    }
+
+    @Named("getHasMultipleVariants")
+    default Boolean getHasMultipleVariants(List<ProductVariant> variants) {
+        if (variants == null) return false;
+        return variants.size() > 1;
+    }
+
+    @Named("getTotalStock")
+    default Integer getTotalStock(List<ProductVariant> variants) {
+        if (variants == null || variants.isEmpty()) return 0;
+        return variants.stream()
+                .mapToInt(ProductVariant::getStock)
+                .sum();
     }
 }

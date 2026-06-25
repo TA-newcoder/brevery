@@ -77,11 +77,11 @@
           </thead>
           <tbody>
             <tr v-for="o in sortedOrders" :key="o.orderId" class="order-row">
-              <td class="fw-semibold cursor-pointer" style="color: var(--primary); text-decoration: underline;" @click="openOrderDetail(o)">#{{ o.orderCode }}</td>
+              <td class="fw-semibold cursor-pointer order-link" @click="openOrderDetail(o)">#{{ o.orderCode }}</td>
               <td>
                 <div class="d-flex flex-column">
-                  <span class="fw-semibold" style="color: var(--text-main)">{{ o.recipientName || o.customerName }}</span>
-                  <span class="small" style="color: var(--text-sub)">{{ o.recipientPhone || '' }}</span>
+                  <span class="fw-semibold" style="color: var(--text-main)">{{ o.receiverName || 'Khách vãng lai' }}</span>
+                  <span class="small" style="color: var(--text-sub)">{{ o.receiverPhone || '' }}</span>
                 </div>
               </td>
               <td class="fw-bold" style="color: var(--text-main)">{{ formatPrice(o.totalAmount) }}</td>
@@ -170,30 +170,39 @@
             <div class="mb-3 p-3 rounded-3" style="background: var(--bg-muted)">
               <h6 class="fw-bold" style="color: var(--text-main)">Thông tin giao hàng</h6>
               <div class="small" style="color: var(--text-sub)">
-                <p class="mb-1"><strong>Người nhận:</strong> {{ selectedOrder?.recipientName || selectedOrder?.customerName }}</p>
-                <p class="mb-1"><strong>SĐT:</strong> {{ selectedOrder?.recipientPhone }}</p>
-                <p class="mb-0"><strong>Địa chỉ:</strong> {{ selectedOrder?.addressDetail || 'Mua tại cửa hàng' }}</p>
+                <p class="mb-1"><strong>Người nhận:</strong> {{ selectedOrder?.receiverName || 'Khách vãng lai' }}</p>
+                <p class="mb-1"><strong>SĐT:</strong> {{ selectedOrder?.receiverPhone || 'Chưa cập nhật' }}</p>
+                <p class="mb-0"><strong>Địa chỉ:</strong> {{ selectedOrder?.shippingAddress || 'Mua tại cửa hàng' }}</p>
               </div>
             </div>
 
             <h6 class="fw-bold mb-2" style="color: var(--text-main)">Sản phẩm</h6>
             <div class="d-flex flex-column gap-2 mb-3">
-              <div v-for="item in selectedOrder?.items" :key="item.variantId" class="d-flex justify-content-between align-items-center p-2 rounded-3 border">
-                <div>
-                  <div class="fw-semibold" style="color: var(--text-main)">{{ item.productName }}</div>
-                  <div class="small" style="color: var(--text-sub)">Size {{ item.size }} x {{ item.quantity }}</div>
+              <div v-for="item in selectedOrder?.orderDetails" :key="item.orderDetailId" class="d-flex align-items-center p-2 rounded-3 border" style="background: var(--bg-surface);">
+                <img :src="item.primaryImageUrl || 'https://placehold.co/60x60?text=No+Image'" class="rounded me-3" style="width: 50px; height: 50px; object-fit: cover; border: 1px solid var(--border-color);" />
+                <div class="flex-grow-1">
+                  <div class="fw-semibold" style="color: var(--text-main); font-size: 0.95rem;">{{ item.productName }}</div>
+                  <div class="small" style="color: var(--text-sub)">Size {{ item.productSize || 'Mặc định' }} x {{ item.quantity }}</div>
                 </div>
-                <div class="fw-bold" style="color: var(--primary)">{{ formatPrice(item.price * item.quantity) }}</div>
+                <div class="fw-bold text-nowrap" style="color: var(--primary)">{{ formatPrice(item.subTotal || item.price * item.quantity) }}</div>
+              </div>
+              <div v-if="!selectedOrder?.orderDetails || selectedOrder.orderDetails.length === 0" class="text-center text-muted small py-2">
+                Không có chi tiết sản phẩm
               </div>
             </div>
 
-            <div class="d-flex justify-content-between align-items-center pt-3 border-top">
+            <div class="d-flex justify-content-between align-items-center pt-2 pb-2" v-if="selectedOrder?.discountAmount > 0">
+              <span class="fw-semibold text-muted">Giảm giá (Voucher)</span>
+              <span class="fw-semibold" style="color: var(--color-danger)">-{{ formatPrice(selectedOrder?.discountAmount) }}</span>
+            </div>
+
+            <div class="d-flex justify-content-between align-items-center pt-2 border-top">
               <span class="fw-semibold" style="color: var(--text-main)">Tổng thanh toán</span>
               <span class="fw-bold fs-5" style="color: var(--color-danger)">{{ formatPrice(selectedOrder?.totalAmount) }}</span>
             </div>
             <div class="d-flex justify-content-between align-items-center mt-2 small">
               <span style="color: var(--text-sub)">Phương thức</span>
-              <span class="fw-semibold text-uppercase" style="color: var(--text-main)">{{ selectedOrder?.paymentMethod }} ({{ selectedOrder?.paymentStatus }})</span>
+              <span class="fw-semibold text-uppercase" style="color: var(--text-main)">{{ selectedOrder?.paymentMethod || 'COD' }} ({{ selectedOrder?.paymentStatus || 'PENDING' }})</span>
             </div>
           </div>
           <div class="mt-4 text-end">
@@ -389,6 +398,15 @@ onMounted(fetchOrders)
 /* Order Row */
 .order-row { transition: background 0.2s ease; }
 .order-row:hover { background: var(--bg-muted); }
+
+.order-link {
+  color: var(--primary);
+  text-decoration: none;
+  transition: opacity 0.2s ease;
+}
+.order-link:hover {
+  opacity: 0.75;
+}
 
 /* Action Buttons */
 .action-group {

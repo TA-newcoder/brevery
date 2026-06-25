@@ -11,6 +11,8 @@ public class InventoryReceiptDTO {
     private Long receiptId;
     private Long productId;
     private String productName;
+    private String categoryName;
+    private String variantName;
     private Integer quantity;
     private BigDecimal importPrice;
     private String supplier;

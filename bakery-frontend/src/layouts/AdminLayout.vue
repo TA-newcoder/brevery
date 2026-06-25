@@ -9,7 +9,7 @@
         </transition>
       </div>
 
-      <nav class="flex-grow-1">
+      <nav class="flex-grow-1" style="overflow-y: auto; overflow-x: hidden;">
         <router-link v-for="item in menuItems" :key="item.to" :to="item.to"
           :class="['sidebar-item', { active: isActiveRoute(item.to) }]">
           <span class="icon d-flex align-items-center justify-content-center"><component :is="item.icon" size="24" weight="duotone" /></span>
@@ -135,7 +135,6 @@ const menuItems = [
   { to: '/admin/orders', icon: PhPackage, label: 'Đơn hàng' },
   { to: '/admin/users', icon: PhUsers, label: 'Người dùng' },
   { to: '/admin/coupons', icon: PhTicket, label: 'Khuyến mãi' },
-  { to: '/admin/banners', icon: PhStar, label: 'Banner QC' },
   { to: '/admin/reports', icon: PhChartLine, label: 'Báo cáo' },
   { to: '/admin/reviews', icon: PhStar, label: 'Bình luận' },
   { to: '/admin/inventory', icon: PhClipboardText, label: 'Kho hàng' },

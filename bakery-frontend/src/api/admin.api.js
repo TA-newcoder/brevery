@@ -18,6 +18,8 @@ export const adminApi = {
   getLowStock: (threshold = 10) => api.get('/admin/inventory/low-stock', { params: { threshold } }),
   getReceipts: (params) => api.get('/admin/inventory/receipts', { params }),
   createReceipt: (data) => api.post('/admin/inventory/receipts', data),
+  updateVariantStock: (variantId, stock) => api.put(`/admin/inventory/variants/${variantId}/stock`, null, { params: { stock } }),
+  getInventoryProducts: (params) => api.get('/admin/inventory/products', { params }),
 
   // Reviews
   getReviews: (params) => api.get('/admin/reviews', { params }),
@@ -42,12 +44,14 @@ export const adminApi = {
   toggleCoupon: (id) => api.patch(`/admin/coupons/${id}/toggle`),
   deleteCoupon: (id) => api.delete(`/admin/coupons/${id}`),
 
-  // Banners
-  getBanners: () => api.get('/admin/banners'),
-  createBanner: (data) => api.post('/admin/banners', data),
-  updateBanner: (id, data) => api.put(`/admin/banners/${id}`, data),
-  toggleBanner: (id) => api.patch(`/admin/banners/${id}/toggle`),
-  deleteBanner: (id) => api.delete(`/admin/banners/${id}`),
+  // Files
+  uploadFile: (file) => {
+    const formData = new FormData();
+    formData.append('file', file);
+    return api.post('/files/upload', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' }
+    });
+  },
 
   // Analytics
   getSummary: () => api.get('/admin/analytics/summary'),

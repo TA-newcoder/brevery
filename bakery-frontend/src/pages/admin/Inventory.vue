@@ -1,10 +1,5 @@
 <template>
   <div class="admin-inventory">
-    <div class="d-flex justify-content-end align-items-center mb-4 flex-wrap gap-3">
-      <button class="btn btn-primary d-flex align-items-center gap-2" @click="openReceiptModal">
-        <PhPlus size="20" weight="bold" /> Thêm Phiếu Nhập
-      </button>
-    </div>
 
     <div class="row g-4">
       <!-- CẢNH BÁO TỒN KHO -->
@@ -46,7 +41,22 @@
       <!-- LỊCH SỬ PHIẾU NHẬP -->
       <div class="col-lg-7">
         <div class="bakery-card h-100">
-          <h6 class="fw-bold mb-4" style="color: var(--text-main)">Lịch sử nhập kho</h6>
+          <div class="d-flex align-items-center justify-content-between mb-4">
+            <h6 class="fw-bold mb-0" style="color: var(--text-main)">Lịch sử nhập kho</h6>
+            <div class="d-flex gap-2 align-items-center">
+              <select class="form-select bakery-input form-select-sm" v-model="receiptFilter.dateRange" @change="handleDateRangeChange" style="width: auto;">
+                <option value="">Tất cả thời gian</option>
+                <option value="today">Hôm nay</option>
+                <option value="yesterday">Hôm qua</option>
+                <option value="custom">Tuỳ chọn...</option>
+              </select>
+              <div v-if="receiptFilter.dateRange === 'custom'" class="d-flex gap-2">
+                <input type="date" class="form-control bakery-input form-control-sm" v-model="receiptFilter.startDate" @change="fetchReceipts(0)" />
+                <span class="text-muted d-flex align-items-center">-</span>
+                <input type="date" class="form-control bakery-input form-control-sm" v-model="receiptFilter.endDate" @change="fetchReceipts(0)" />
+              </div>
+            </div>
+          </div>
           
           <div v-if="isLoadingReceipts" class="text-center py-4">
             <span class="spinner-border text-primary" role="status"></span>
@@ -60,18 +70,24 @@
                 <tr>
                   <th>Sản phẩm</th>
                   <th>Số lượng</th>
-                  <th>Giá nhập</th>
                   <th>Thời gian</th>
                 </tr>
               </thead>
               <tbody>
                 <tr v-for="receipt in receipts" :key="receipt.receiptId">
                   <td>
-                    <div class="fw-semibold">{{ receipt.productName }}</div>
-                    <div class="small text-sub text-truncate" style="max-width: 150px;" :title="receipt.note">{{ receipt.note }}</div>
+                    <div class="fw-semibold product-history-link" @click="viewProductHistory(receipt.productId, receipt.productName)" title="Xem chi tiết lịch sử">
+                      {{ receipt.productName }}
+                    </div>
+                    <div class="small mt-1 text-sub">
+                      <span v-if="receipt.variantName" class="fw-bold" style="color: var(--bakery-primary)">Size {{ receipt.variantName }}</span>
+                      <span v-if="receipt.variantName && displayNote(receipt.note)" class="mx-2">•</span>
+                      <span v-if="displayNote(receipt.note)">{{ displayNote(receipt.note) }}</span>
+                    </div>
                   </td>
-                  <td class="fw-bold" style="color: var(--color-success)">+{{ receipt.quantity }}</td>
-                  <td>{{ formatPrice(receipt.importPrice) }}</td>
+                  <td class="fw-bold fs-6" :class="receipt.quantity > 0 ? 'text-success' : 'text-danger'">
+                    {{ receipt.quantity > 0 ? '+' : '' }}{{ receipt.quantity }}
+                  </td>
                   <td class="text-sub small">{{ formatDate(receipt.createdAt) }}</td>
                 </tr>
               </tbody>
@@ -92,13 +108,14 @@
       <div class="d-flex justify-content-between align-items-center mb-4">
         <h6 class="fw-bold mb-0" style="color: var(--text-main)">Danh sách Tồn Kho Toàn Bộ</h6>
         <div class="d-flex gap-2">
-           <input type="text" class="form-control bakery-input form-control-sm" placeholder="Tìm sản phẩm..." style="width: 200px;" />
+           <input type="text" class="form-control bakery-input form-control-sm" placeholder="Tìm tên, danh mục, size..." style="width: 200px;" v-model="searchQuery" />
         </div>
       </div>
       <div class="table-responsive">
         <table class="admin-table">
           <thead>
             <tr>
+              <th style="width: 50px" class="text-center">STT</th>
               <th style="width: 60px">Ảnh</th>
               <th>Sản phẩm</th>
               <th>Danh mục</th>
@@ -107,96 +124,170 @@
             </tr>
           </thead>
           <tbody>
-            <tr v-for="p in productOptions" :key="p.productId">
+            <tr v-for="(p, index) in filteredProductOptions" :key="p.productId">
+              <td class="text-center text-muted fw-semibold">{{ index + 1 }}</td>
               <td>
-                <img :src="p.imageUrl || 'https://placehold.co/100x100?text=No+Image'" class="rounded" style="width: 44px; height: 44px; object-fit: cover; border: 1px solid var(--border-color);" />
+                <img :src="p.images?.[0]?.imageUrl || 'https://placehold.co/100x100?text=No+Image'" class="rounded" style="width: 44px; height: 44px; object-fit: cover; border: 1px solid var(--border-color);" />
               </td>
               <td>
                 <div class="fw-bold" style="color: var(--text-main)">{{ p.name }}</div>
                 <div class="small text-muted">{{ p.variants?.length || 0 }} biến thể</div>
               </td>
               <td>
-                <span class="badge bg-light text-dark border">{{ p.category?.name || '---' }}</span>
+                <span class="badge px-2 py-1" style="background: rgba(222, 172, 113, 0.15); color: var(--bakery-primary); border: 1px solid rgba(222, 172, 113, 0.3); font-weight: 600;">{{ p.categoryName || '---' }}</span>
               </td>
               <td>
-                <div class="d-flex flex-column gap-2 py-1">
-                  <div v-for="v in p.variants" :key="v.variantId" class="d-flex align-items-center gap-2">
-                    <span class="badge" style="background: var(--bg-surface); color: var(--text-main); border: 1px solid var(--border-color); width: 60px;">Size {{ v.size }}</span>
-                    <div class="d-flex align-items-center gap-1" style="min-width: 80px;">
-                      <span class="fw-bold" :class="v.stock < 5 ? 'text-danger' : (v.stock < 10 ? 'text-warning' : 'text-success')">
+                <div class="d-flex flex-wrap gap-2 py-1">
+                  <div v-for="v in p.variants" :key="v.variantId" class="stock-chip">
+                    <span class="size-label">{{ v.size }} :</span>
+                    
+                    <template v-if="editingVariant !== v.variantId">
+                      <span class="stock-val" :class="v.stock < 5 ? 'text-danger' : (v.stock < 10 ? 'text-warning' : 'text-success')">
                         {{ v.stock }}
                       </span>
-                      <span class="small text-muted">đơn vị</span>
-                    </div>
+                      <button class="btn btn-link p-0 ms-2 edit-btn" title="Chỉnh sửa nhanh" @click="startEditStock(v)">
+                        <PhPencilSimple size="14" weight="bold" />
+                      </button>
+                    </template>
+                    
+                    <template v-else>
+                      <input type="number" class="form-control form-control-sm p-1 text-center fw-bold ms-1" style="width: 50px; height: 26px;" v-model="editStockValue" @keyup.enter="saveStock(v)" />
+                      <div class="d-flex gap-1 ms-2">
+                        <button class="btn btn-sm p-0 text-success" title="Lưu" @click="saveStock(v)"><PhCheck size="16" weight="bold"/></button>
+                        <button class="btn btn-sm p-0 text-secondary" title="Huỷ" @click="cancelEditStock()"><PhX size="16" weight="bold"/></button>
+                      </div>
+                    </template>
                   </div>
                   <div v-if="!p.variants || p.variants.length === 0" class="small text-muted">Chưa có biến thể</div>
                 </div>
               </td>
               <td class="text-end">
-                <button class="btn btn-sm btn-bakery-ghost" @click="quickImport({ productId: p.productId, variantId: p.variants?.[0]?.variantId })">
-                  <PhPlus /> Nhập
-                </button>
+                <div class="d-flex flex-column gap-2">
+                  <button class="btn btn-sm btn-bakery-ghost" @click="quickImport(p)">
+                    <PhPlus /> Nhập
+                  </button>
+                  <button class="btn btn-sm btn-outline-secondary" @click="viewProductHistory(p.productId, p.name)">
+                    <PhClockCounterClockwise /> Lịch sử
+                  </button>
+                </div>
               </td>
             </tr>
-            <tr v-if="productOptions.length === 0">
-              <td colspan="5" class="text-center py-4 text-muted">Không có dữ liệu sản phẩm</td>
+            <tr v-if="filteredProductOptions.length === 0">
+              <td colspan="6" class="text-center py-4 text-muted">Không có dữ liệu sản phẩm</td>
             </tr>
           </tbody>
         </table>
       </div>
     </div>
 
-    <!-- MODAL NHẬP KHO -->
-    <div class="modal fade" id="receiptModal" tabindex="-1" aria-hidden="true">
+    <!-- MODAL NHẬP / CHỈNH SỬA KHO NHANH -->
+    <div class="modal fade" id="quickImportModal" tabindex="-1" aria-hidden="true">
       <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content bakery-card p-0 overflow-hidden">
           <div class="modal-header border-0 bg-light pb-2">
-            <h5 class="modal-title fw-bold" style="color: var(--text-main)">Tạo Phiếu Nhập Kho</h5>
+            <h5 class="modal-title fw-bold" style="color: var(--text-main)">Nhập / Xuất Tồn Kho</h5>
             <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
           </div>
-          <form @submit.prevent="submitReceipt">
-            <div class="modal-body pt-2">
-              <div class="mb-3">
-                <label class="form-label text-sub fw-semibold small">Sản phẩm</label>
-                <select class="form-select bakery-input" v-model="form.productId" @change="loadVariants" required>
-                  <option value="" disabled>-- Chọn sản phẩm --</option>
-                  <option v-for="p in productOptions" :key="p.productId" :value="p.productId">{{ p.name }}</option>
-                </select>
+          <form @submit.prevent="submitQuickImport">
+            <div class="modal-body pt-3 pb-4 px-4">
+              <div class="mb-4 text-center">
+                <div class="fw-bold fs-5 text-main mb-1">{{ formQuick.productName }}</div>
               </div>
               <div class="mb-3">
-                <label class="form-label text-sub fw-semibold small">Biến thể (Size)</label>
-                <select class="form-select bakery-input" v-model="form.variantId" required :disabled="!form.productId">
+                <label class="form-label text-sub fw-semibold small">Phân loại (Size)</label>
+                <select class="form-select bakery-input" v-model="formQuick.variantId" @change="updateQuickFormStock" required>
                   <option value="" disabled>-- Chọn size --</option>
-                  <option v-for="v in variantOptions" :key="v.variantId" :value="v.variantId">Size {{ v.size }} (Tồn: {{ v.stock }})</option>
+                  <option v-for="v in formQuick.variants" :key="v.variantId" :value="v.variantId">Size {{ v.size }} (Tồn hiện tại: {{ v.stock }})</option>
                 </select>
               </div>
-              <div class="row g-3 mb-3">
-                <div class="col-6">
-                  <label class="form-label text-sub fw-semibold small">Số lượng</label>
-                  <input type="number" class="form-control bakery-input" v-model="form.quantity" min="1" required />
+              
+              <div v-if="formQuick.variantId" class="mb-3">
+                <label class="form-label text-sub fw-semibold small">Loại thao tác</label>
+                <div class="d-flex gap-4 mb-3">
+                  <div class="form-check">
+                    <input class="form-check-input" type="radio" name="adjustType" id="typeAdd" value="add" v-model="formQuick.actionType">
+                    <label class="form-check-label fw-semibold text-success" for="typeAdd">Nhập thêm (+)</label>
+                  </div>
+                  <div class="form-check">
+                    <input class="form-check-input" type="radio" name="adjustType" id="typeSub" value="sub" v-model="formQuick.actionType">
+                    <label class="form-check-label fw-semibold text-danger" for="typeSub">Xuất bớt (-)</label>
+                  </div>
                 </div>
-                <div class="col-6">
-                  <label class="form-label text-sub fw-semibold small">Giá nhập (VNĐ)</label>
-                  <input type="number" class="form-control bakery-input" v-model="form.importPrice" min="0" required />
+
+                <label class="form-label text-sub fw-semibold small">Số lượng</label>
+                <div class="d-flex align-items-center">
+                  <input type="number" class="form-control bakery-input text-center fw-bold fs-5" v-model.number="formQuick.quantity" min="1" required />
                 </div>
-              </div>
-              <div class="mb-3">
-                <label class="form-label text-sub fw-semibold small">Nhà cung cấp (Tùy chọn)</label>
-                <input type="text" class="form-control bakery-input" v-model="form.supplier" />
-              </div>
-              <div class="mb-3">
-                <label class="form-label text-sub fw-semibold small">Ghi chú</label>
-                <textarea class="form-control bakery-input" v-model="form.note" rows="2"></textarea>
+                
+                <div class="mt-4 text-center p-3 rounded" style="background: var(--bg-muted)">
+                  <span class="small text-muted mb-1 d-block">Tồn kho sau khi cập nhật:</span>
+                  <span class="fw-bold fs-3" :class="finalCalculatedStock < 0 ? 'text-danger' : 'text-success'">
+                    {{ finalCalculatedStock }}
+                  </span>
+                </div>
               </div>
             </div>
-            <div class="modal-footer border-0">
-              <button type="button" class="btn btn-outline-secondary px-4 fw-semibold" data-bs-dismiss="modal">Hủy</button>
-              <button type="submit" class="btn btn-primary px-4 fw-semibold" :disabled="isSubmitting">
-                <span v-if="isSubmitting" class="spinner-border spinner-border-sm me-2" role="status"></span>
-                Nhập Kho
-              </button>
+            <div class="modal-footer border-0 px-4 pb-4">
+              <div class="d-flex w-100 gap-2">
+                <button type="button" class="btn btn-light px-4 fw-semibold flex-fill" data-bs-dismiss="modal">Hủy</button>
+                <button type="submit" class="btn btn-bakery px-4 fw-semibold flex-fill" :disabled="isSubmittingQuick || !formQuick.variantId || finalCalculatedStock < 0 || formQuick.quantity <= 0">
+                  <span v-if="isSubmittingQuick" class="spinner-border spinner-border-sm me-2" role="status"></span>
+                  Xác nhận
+                </button>
+              </div>
             </div>
           </form>
+        </div>
+      </div>
+    </div>
+
+    <!-- MODAL LỊCH SỬ NHẬP CỦA SẢN PHẨM -->
+    <div class="modal fade" id="productHistoryModal" tabindex="-1" aria-hidden="true">
+      <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content bakery-card p-0 overflow-hidden">
+          <div class="modal-header border-0 bg-light pb-2">
+            <h5 class="modal-title fw-bold" style="color: var(--text-main)">Lịch sử biến động: {{ selectedHistoryProductName }}</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body">
+            <div v-if="isLoadingProductHistory" class="text-center py-4">
+              <span class="spinner-border text-primary" role="status"></span>
+            </div>
+            <div v-else-if="productHistoryList.length === 0" class="text-center py-4 text-sub">
+              Chưa có lịch sử nhập/điều chỉnh nào.
+            </div>
+            <div v-else class="table-responsive">
+              <table class="admin-table">
+                <thead>
+                  <tr>
+                    <th>Loại / Ghi chú</th>
+                    <th>Số lượng</th>
+                    <th>Thời gian</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr v-for="receipt in productHistoryList" :key="receipt.receiptId">
+                    <td>
+                      <div class="text-sub">
+                        <span v-if="receipt.variantName" class="fw-bold" style="color: var(--bakery-primary)">Size {{ receipt.variantName }}</span>
+                        <span v-if="receipt.variantName && displayNote(receipt.note)" class="mx-2">•</span>
+                        <span v-if="displayNote(receipt.note)">{{ displayNote(receipt.note) }}</span>
+                      </div>
+                    </td>
+                    <td class="fw-bold fs-6" :class="receipt.quantity > 0 ? 'text-success' : 'text-danger'">
+                      {{ receipt.quantity > 0 ? '+' : '' }}{{ receipt.quantity }}
+                    </td>
+                    <td class="text-sub small">{{ formatDate(receipt.createdAt) }}</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            <!-- Pagination for modal -->
+            <div class="d-flex justify-content-end mt-3" v-if="productHistoryTotalPages > 1">
+              <button class="btn btn-sm btn-outline-secondary me-2" :disabled="productHistoryPage === 0" @click="fetchProductHistory(productHistoryPage - 1)">Trang trước</button>
+              <button class="btn btn-sm btn-outline-secondary" :disabled="productHistoryPage >= productHistoryTotalPages - 1" @click="fetchProductHistory(productHistoryPage + 1)">Trang sau</button>
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -205,11 +296,11 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { adminApi } from '@/api/admin.api'
 import { productApi } from '@/api/product.api' // To fetch product details
 import { toast } from 'vue3-toastify'
-import { PhWarningCircle, PhPlus, PhArrowsClockwise } from '@phosphor-icons/vue'
+import { PhWarningCircle, PhPlus, PhArrowsClockwise, PhPencilSimple, PhCheck, PhX, PhClockCounterClockwise } from '@phosphor-icons/vue'
 
 const lowStockItems = ref([])
 const isLoadingLowStock = ref(false)
@@ -219,25 +310,66 @@ const isLoadingReceipts = ref(false)
 const currentPage = ref(0)
 const totalPages = ref(1)
 
-const productOptions = ref([])
-const variantOptions = ref([])
-const isSubmitting = ref(false)
+const isSubmittingQuick = ref(false)
 
-const form = ref({
+const formQuick = ref({
   productId: '',
+  productName: '',
+  variants: [],
   variantId: '',
-  quantity: 1,
-  importPrice: 0,
-  supplier: '',
-  note: ''
+  actionType: 'add',
+  quantity: 1
 })
 
-let modalInstance = null
+const searchQuery = ref('')
+const filteredProductOptions = computed(() => {
+  if (!searchQuery.value) return productOptions.value
+  const q = searchQuery.value.toLowerCase()
+  return productOptions.value.filter(p => 
+    p.name.toLowerCase().includes(q) || 
+    p.categoryName?.toLowerCase().includes(q) ||
+    p.variants?.some(v => v.size.toLowerCase().includes(q))
+  )
+})
+
+const productOptions = ref([])
+
+const editingVariant = ref(null)
+const editStockValue = ref(0)
+
+const startEditStock = (v) => {
+  editingVariant.value = v.variantId
+  editStockValue.value = v.stock
+}
+
+const cancelEditStock = () => {
+  editingVariant.value = null
+}
+
+const saveStock = async (v) => {
+  if (editStockValue.value < 0) {
+    toast.error('Số lượng không được âm')
+    return
+  }
+  try {
+    await adminApi.updateVariantStock(v.variantId, editStockValue.value)
+    v.stock = editStockValue.value
+    toast.success('Cập nhật số lượng thành công!')
+    editingVariant.value = null
+    fetchLowStock()
+    fetchReceipts(0)
+  } catch (error) {
+    toast.error('Có lỗi xảy ra khi cập nhật số lượng')
+  }
+}
+
+let quickModalInstance = null
 
 onMounted(async () => {
   // Load bootstrap modal dynamically
   const { Modal } = await import('bootstrap')
-  modalInstance = new Modal(document.getElementById('receiptModal'))
+  quickModalInstance = new Modal(document.getElementById('quickImportModal'))
+  historyModalInstance = new Modal(document.getElementById('productHistoryModal'))
   
   fetchLowStock()
   fetchReceipts()
@@ -248,6 +380,12 @@ const formatPrice = (p) => new Intl.NumberFormat('vi-VN', { style: 'currency', c
 const formatDate = (d) => {
   const date = new Date(d)
   return `${date.getDate().toString().padStart(2, '0')}/${(date.getMonth() + 1).toString().padStart(2, '0')}/${date.getFullYear()} ${date.getHours().toString().padStart(2, '0')}:${date.getMinutes().toString().padStart(2, '0')}`
+}
+
+const displayNote = (note) => {
+  if (!note) return ''
+  if (note.includes('Điều chỉnh') || note.includes('Cập nhật trực tiếp')) return ''
+  return note
 }
 
 const fetchLowStock = async () => {
@@ -262,10 +400,70 @@ const fetchLowStock = async () => {
   }
 }
 
+const receiptFilter = ref({ dateRange: '', startDate: '', endDate: '' })
+
+const handleDateRangeChange = () => {
+  const today = new Date()
+  if (receiptFilter.value.dateRange === 'today') {
+    const d = today.toISOString().split('T')[0]
+    receiptFilter.value.startDate = d
+    receiptFilter.value.endDate = d
+    fetchReceipts(0)
+  } else if (receiptFilter.value.dateRange === 'yesterday') {
+    const yesterday = new Date(today)
+    yesterday.setDate(yesterday.getDate() - 1)
+    const d = yesterday.toISOString().split('T')[0]
+    receiptFilter.value.startDate = d
+    receiptFilter.value.endDate = d
+    fetchReceipts(0)
+  } else if (receiptFilter.value.dateRange === 'custom') {
+    // Wait for user to input date
+  } else {
+    receiptFilter.value.startDate = ''
+    receiptFilter.value.endDate = ''
+    fetchReceipts(0)
+  }
+}
+
+let historyModalInstance = null
+const selectedHistoryProductId = ref(null)
+const selectedHistoryProductName = ref('')
+const productHistoryList = ref([])
+const productHistoryPage = ref(0)
+const productHistoryTotalPages = ref(1)
+const isLoadingProductHistory = ref(false)
+
+const viewProductHistory = async (productId, productName) => {
+  selectedHistoryProductId.value = productId
+  selectedHistoryProductName.value = productName
+  productHistoryPage.value = 0
+  await fetchProductHistory(0)
+  historyModalInstance?.show()
+}
+
+const fetchProductHistory = async (page = 0) => {
+  if (!selectedHistoryProductId.value) return
+  isLoadingProductHistory.value = true
+  try {
+    const res = await adminApi.getReceipts({ page, size: 5, productId: selectedHistoryProductId.value })
+    productHistoryList.value = res.data?.data?.content || []
+    productHistoryPage.value = res.data?.data?.number || 0
+    productHistoryTotalPages.value = res.data?.data?.totalPages || 1
+  } catch (error) {
+    console.error(error)
+  } finally {
+    isLoadingProductHistory.value = false
+  }
+}
+
 const fetchReceipts = async (page = 0) => {
   isLoadingReceipts.value = true
   try {
-    const res = await adminApi.getReceipts({ page, size: 5 })
+    const params = { page, size: 5 }
+    if (receiptFilter.value.startDate && receiptFilter.value.dateRange !== '') params.startDate = receiptFilter.value.startDate
+    if (receiptFilter.value.endDate && receiptFilter.value.dateRange !== '') params.endDate = receiptFilter.value.endDate
+    
+    const res = await adminApi.getReceipts(params)
     receipts.value = res.data?.data?.content || []
     currentPage.value = res.data?.data?.number || 0
     totalPages.value = res.data?.data?.totalPages || 1
@@ -278,55 +476,70 @@ const fetchReceipts = async (page = 0) => {
 
 const fetchProductOptions = async () => {
   try {
-    const res = await productApi.getProducts({ size: 100 })
+    const res = await adminApi.getInventoryProducts({ size: 100 })
     productOptions.value = res.data?.data?.content || []
   } catch (error) {
     console.error(error)
   }
 }
 
-const loadVariants = async () => {
-  form.value.variantId = ''
-  variantOptions.value = []
-  if (!form.value.productId) return
+const finalCalculatedStock = computed(() => {
+  if (!formQuick.value.variantId) return 0
+  const variant = formQuick.value.variants.find(v => v.variantId === formQuick.value.variantId)
+  const currentStock = variant ? variant.stock : 0
   
-  try {
-    const res = await productApi.getProductDetail(form.value.productId)
-    variantOptions.value = res.data?.data?.variants || []
-  } catch (error) {
-    console.error(error)
+  let q = parseInt(formQuick.value.quantity) || 0
+  if (q < 0) q = 0
+  
+  if (formQuick.value.actionType === 'add') {
+    return currentStock + q
+  } else {
+    return currentStock - q
   }
-}
+})
 
-const openReceiptModal = () => {
-  form.value = { productId: '', variantId: '', quantity: 1, importPrice: 0, supplier: '', note: '' }
-  variantOptions.value = []
-  modalInstance?.show()
+const updateQuickFormStock = () => {
+  formQuick.value.quantity = 1
+  formQuick.value.actionType = 'add'
 }
 
 const quickImport = async (item) => {
-  form.value.productId = item.productId
-  await loadVariants()
-  form.value.variantId = item.variantId
-  form.value.quantity = 10
-  form.value.importPrice = 0
-  form.value.supplier = ''
-  form.value.note = 'Bổ sung tồn kho khẩn cấp'
-  modalInstance?.show()
+  formQuick.value.productId = item.productId
+  formQuick.value.productName = item.productName || item.name || 'Sản phẩm'
+  formQuick.value.variants = item.variants || []
+  
+  if (formQuick.value.variants.length === 0) {
+    try {
+      const res = await productApi.getProductDetail(item.productId)
+      formQuick.value.variants = res.data?.data?.variants || []
+    } catch (e) { console.error(e) }
+  }
+  
+  formQuick.value.variantId = item.variantId || (formQuick.value.variants[0]?.variantId || '')
+  formQuick.value.actionType = 'add'
+  formQuick.value.quantity = 1
+  
+  quickModalInstance?.show()
 }
 
-const submitReceipt = async () => {
-  isSubmitting.value = true
+const submitQuickImport = async () => {
+  const finalStock = finalCalculatedStock.value
+  if (finalStock < 0) return
+  if (formQuick.value.quantity <= 0) return
+  
+  isSubmittingQuick.value = true
   try {
-    await adminApi.createReceipt(form.value)
-    toast.success('Nhập kho thành công!')
-    modalInstance?.hide()
+    await adminApi.updateVariantStock(formQuick.value.variantId, finalStock)
+    toast.success('Cập nhật tồn kho thành công!')
+    quickModalInstance?.hide()
+    
     fetchLowStock()
     fetchReceipts(0)
+    fetchProductOptions()
   } catch (error) {
-    toast.error(error.response?.data?.message || 'Có lỗi xảy ra khi tạo phiếu nhập')
+    toast.error('Có lỗi xảy ra khi cập nhật tồn kho')
   } finally {
-    isSubmitting.value = false
+    isSubmittingQuick.value = false
   }
 }
 </script>
@@ -352,5 +565,51 @@ const submitReceipt = async () => {
 .low-stock-list::-webkit-scrollbar-thumb {
   background: var(--border-color);
   border-radius: 10px;
+}
+
+/* Stock Chip Design */
+.stock-chip {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  padding: 4px 10px;
+  display: inline-flex;
+  align-items: center;
+  transition: all 0.2s ease;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.02);
+}
+.stock-chip:hover {
+  border-color: var(--bakery-primary);
+  background: rgba(222, 172, 113, 0.05);
+}
+.stock-chip .size-label {
+  font-size: 0.8rem;
+  color: var(--text-sub);
+  margin-right: 6px;
+  font-weight: 600;
+}
+.stock-chip .stock-val {
+  font-size: 0.95rem;
+  font-weight: 700;
+}
+.stock-chip .edit-btn {
+  color: var(--text-muted);
+  opacity: 0;
+  transition: opacity 0.2s ease, color 0.2s ease;
+}
+.stock-chip:hover .edit-btn {
+  opacity: 1;
+}
+.stock-chip .edit-btn:hover {
+  color: var(--bakery-primary);
+}
+
+.product-history-link {
+  color: var(--text-main);
+  cursor: pointer;
+  transition: color 0.2s ease;
+}
+.product-history-link:hover {
+  color: var(--bakery-primary);
 }
 </style>

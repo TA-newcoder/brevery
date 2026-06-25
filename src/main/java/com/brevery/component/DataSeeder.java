@@ -31,6 +31,7 @@ public class DataSeeder implements CommandLineRunner {
     private final InventoryReceiptRepository inventoryReceiptRepository;
     private final PasswordEncoder passwordEncoder;
     private final JdbcTemplate jdbcTemplate;
+    private final org.springframework.data.redis.core.StringRedisTemplate redisTemplate;
 
     @Override
     @Transactional
@@ -41,6 +42,13 @@ public class DataSeeder implements CommandLineRunner {
         }
         
         log.info("Starting comprehensive data seeding...");
+        
+        try {
+            redisTemplate.getConnectionFactory().getConnection().serverCommands().flushDb();
+            log.info("Cleared Redis cache.");
+        } catch (Exception e) {
+            log.warn("Failed to clear Redis cache: {}", e.getMessage());
+        }
 
         // 1. Seed Users (reuse existing ones from DataInitializer, add new customers)
         List<User> users = new ArrayList<>();
@@ -76,23 +84,66 @@ public class DataSeeder implements CommandLineRunner {
         log.info("Seeded/Reused {} users.", users.size());
 
         // 2. Seed Categories
-        String[] categoryNames = {"Bánh kem", "Bánh mì", "Bánh ngọt", "Trà sữa", "Cà phê"};
+        String[] categoryNames = {"Bánh quy đóng hộp", "Bánh xốp đóng thùng", "Nước khoáng chai", "Nước ngọt đóng lon", "Nước trái cây chai thủy tinh"};
         List<Category> categories = new ArrayList<>();
         for (String catName : categoryNames) {
-            categories.add(Category.builder().name(catName).description("Danh mục " + catName).isActive(true).build());
+            categories.add(Category.builder().name(catName).description("Danh mục phân phối " + catName).isActive(true).build());
         }
         categoryRepository.saveAll(categories);
         log.info("Seeded 5 categories.");
 
-        // 3. Seed Products (20+) & Variants & Inventory Receipts
+        // 3. Seed Products with detailed descriptions for AI recommendation
         List<Product> products = new ArrayList<>();
         Random random = new Random();
-        for (int i = 1; i <= 25; i++) {
-            Category category = categories.get(i % 5);
+        
+        // Define products per category with rich descriptions
+        String[][] productData = {
+            // Category 0: Bánh quy đóng hộp
+            {"Bánh quy bơ Danisa", "Bánh quy bơ Danisa nhập khẩu Đan Mạch. Vị bơ thơm béo, độ ngọt vừa phải, giòn tan trong miệng. Thành phần: bơ, bột mì, đường, trứng. Thích hợp làm quà biếu, ăn kèm trà chiều. HSD: 12 tháng.", "0"},
+            {"Bánh quy ít đường Julie's", "Bánh quy Julie's Less Sugar nhập khẩu Malaysia. Giảm 40% đường so với bánh thường, VỊ ÍT NGỌT phù hợp người ăn kiêng hoặc người lớn tuổi. Giòn xốp, vị bơ nhẹ. HSD: 10 tháng.", "0"},
+            {"Bánh quy socola Oreo", "Bánh quy Oreo nhân kem vani. Vị socola đậm đà, kem ngọt dịu. Thích hợp cho trẻ em và người thích ăn vặt. Đóng hộp tiện lợi, dễ bảo quản. HSD: 9 tháng.", "0"},
+            {"Bánh quy phô mai Kjeldsens", "Bánh quy phô mai Kjeldsens nhập khẩu Đan Mạch. Vị phô mai mặn nhẹ, KHÔNG NGỌT, giòn rụm. Rất thích hợp ăn kèm rượu vang hoặc trà đen. HSD: 12 tháng.", "0"},
+            {"Bánh quy ngũ cốc Bahlsen", "Bánh quy ngũ cốc Leibniz Bahlsen từ Đức. VỊ ÍT NGỌT, giàu chất xơ từ yến mạch và hạt lanh. Phù hợp người ăn healthy, tập gym. Không chứa cholesterol. HSD: 14 tháng.", "0"},
+            
+            // Category 1: Bánh xốp đóng thùng  
+            {"Bánh xốp kem sữa Nabati", "Bánh xốp Nabati nhân kem sữa, nhập khẩu Indonesia. Vị ngọt dịu, xốp nhẹ, tan nhanh. Thích hợp ăn vặt hàng ngày. Đóng thùng 20 gói tiện lợi phân phối. HSD: 12 tháng.", "1"},
+            {"Bánh xốp socola Tango", "Bánh xốp Tango vị socola đậm, NGỌT VỪA. Lớp xốp giòn kẹp kem socola béo ngậy. Phổ biến trong các tiệm tạp hóa. Đóng thùng 24 gói. HSD: 10 tháng.", "1"},
+            {"Bánh xốp matcha Collon", "Bánh xốp cuộn Collon vị matcha trà xanh Nhật Bản. VỊ THANH, ÍT NGỌT, hương trà xanh tự nhiên. Thích hợp cho người thích vị nhẹ nhàng. Đóng hộp nhỏ gọn. HSD: 8 tháng.", "1"},
+            {"Bánh xốp phô mai Bika", "Bánh xốp Bika vị phô mai Malaysia. Giòn tan, vị phô mai MẶN NHẸ KHÔNG NGỌT. Rất được ưa chuộng tại Đông Nam Á. Đóng thùng 20 gói. HSD: 12 tháng.", "1"},
+            {"Bánh xốp dâu tây Richeese", "Bánh xốp Richeese nhân kem dâu tây. Vị ngọt thanh, hương dâu tự nhiên. Màu sắc bắt mắt, trẻ em rất thích. Đóng thùng 30 gói nhỏ. HSD: 10 tháng.", "1"},
+
+            // Category 2: Nước khoáng chai
+            {"Nước khoáng Evian 500ml", "Nước khoáng thiên nhiên Evian nhập khẩu Pháp. Nguồn nước từ dãy Alps, không ga, pH trung tính 7.2. Tinh khiết, KHÔNG VỊ, KHÔNG ĐƯỜNG. Phù hợp mọi lứa tuổi. Chai nhựa 500ml.", "2"},
+            {"Nước khoáng Vĩnh Hảo 1.5L", "Nước khoáng thiên nhiên Vĩnh Hảo, nguồn nước khoáng Bình Thuận. Có ga nhẹ tự nhiên, giàu khoáng chất. KHÔNG ĐƯỜNG, KHÔNG CALO. Chai 1.5L dùng gia đình. HSD: 12 tháng.", "2"},
+            {"Nước khoáng Lavie 350ml", "Nước khoáng Lavie tinh khiết, thương hiệu Nestlé. Không ga, nhẹ nhàng, dễ uống. KHÔNG VỊ, KHÔNG ĐƯỜNG. Chai nhỏ 350ml tiện mang theo. Thùng 24 chai.", "2"},
+            {"Nước khoáng Aquafina 500ml", "Nước tinh khiết Aquafina, công nghệ lọc HydRO-7 của PepsiCo. Tinh khiết tuyệt đối, KHÔNG ĐƯỜNG KHÔNG GA. Chai 500ml, phổ biến tại các cửa hàng tiện lợi. Thùng 24 chai.", "2"},
+            {"Nước khoáng Dasani 1.5L", "Nước tinh khiết Dasani thuộc tập đoàn Coca-Cola. Bổ sung khoáng chất thiết yếu. KHÔNG VỊ, KHÔNG CALO. Chai 1.5L phù hợp văn phòng và gia đình. Thùng 12 chai.", "2"},
+            
+            // Category 3: Nước ngọt đóng lon
+            {"Coca-Cola lon 330ml", "Nước ngọt có ga Coca-Cola Classic. Vị cola đặc trưng, NGỌT ĐẬM, sảng khoái. Chứa cafein và đường. Lon nhôm 330ml, uống lạnh ngon nhất. Thùng 24 lon.", "3"},
+            {"Pepsi không đường lon 330ml", "Nước ngọt Pepsi Zero Sugar. Có ga, vị cola đậm đà nhưng KHÔNG ĐƯỜNG, 0 CALO. Phù hợp người ăn kiêng hoặc không thích ngọt. Lon 330ml. Thùng 24 lon.", "3"},
+            {"7Up lon 330ml", "Nước ngọt có ga 7Up vị chanh lime. Vị chua ngọt thanh mát, sảng khoái. Ngọt vừa phải. Lon 330ml, lý tưởng uống lạnh ngày nóng. Thùng 24 lon.", "3"},
+            {"Trà xanh C2 lon 330ml", "Trà xanh đóng lon C2, hương lài. VỊ TRÀ THANH ÍT NGỌT, giàu chất chống oxy hóa từ trà xanh tự nhiên. Không ga, không cafein đậm. Lon 330ml. Thùng 24 lon.", "3"},
+            {"Nước tăng lực Redbull lon 250ml", "Nước tăng lực Redbull vị ngọt thanh. Chứa taurine, cafein, vitamin B. Giúp tỉnh táo, tăng sức bền. NGỌT VỪA, có ga nhẹ. Lon 250ml. Thùng 24 lon.", "3"},
+
+            // Category 4: Nước trái cây chai thủy tinh
+            {"Nước ép táo Martinelli's", "Nước ép táo 100% nguyên chất Martinelli's nhập khẩu Mỹ. Vị táo tự nhiên, NGỌT TỰ NHIÊN KHÔNG THÊM ĐƯỜNG. Không chất bảo quản. Chai thủy tinh 296ml sang trọng. HSD: 18 tháng.", "4"},
+            {"Nước ép cam Tropicana", "Nước cam ép nguyên chất Tropicana. Giàu vitamin C, vị chua ngọt tự nhiên, ÍT NGỌT HƠN NƯỚC NGỌT THÔNG THƯỜNG. Chai thủy tinh 300ml. HSD: 6 tháng (bảo quản lạnh sau khi mở).", "4"},
+            {"Nước ép nho Welch's", "Nước ép nho đỏ Welch's nhập khẩu Mỹ. Vị nho đậm đà, ngọt tự nhiên từ nho Concord. Giàu polyphenol chống oxy hóa. Chai thủy tinh 296ml. KHÔNG THÊM ĐƯỜNG nhân tạo.", "4"},
+            {"Sinh tố xoài chai thủy tinh", "Sinh tố xoài đóng chai thủy tinh, sản xuất tại Việt Nam. Vị xoài Cát Chu thơm ngon, NGỌT TỰ NHIÊN. Đặc sánh, giàu vitamin A và C. Chai 300ml. HSD: 6 tháng.", "4"},
+            {"Nước ép lựu Grante", "Nước ép lựu Grante nhập khẩu Georgia. 100% lựu nguyên chất, VỊ CHUA NHẸ, ÍT NGỌT. Giàu chất chống oxy hóa, tốt cho tim mạch. Chai thủy tinh 750ml cao cấp. HSD: 24 tháng.", "4"},
+        };
+        
+        for (String[] pData : productData) {
+            String name = pData[0];
+            String desc = pData[1];
+            int catIdx = Integer.parseInt(pData[2]);
+            Category category = categories.get(catIdx);
+            
             Product product = Product.builder()
                     .category(category)
-                    .name("Sản phẩm " + category.getName() + " Premium " + i)
-                    .description("Sản phẩm tuyệt hảo từ nguyên liệu tươi mới mỗi ngày. Mang lại hương vị khó quên.")
+                    .name(name)
+                    .description(desc)
                     .isAvailable(true)
                     .totalSold(random.nextInt(200))
                     .lowStockThreshold(10)
@@ -102,9 +153,9 @@ public class DataSeeder implements CommandLineRunner {
             int price = (random.nextInt(100) + 30) * 1000;
             ProductVariant variantM = ProductVariant.builder()
                     .product(product)
-                    .size("M")
+                    .size("Hộp/Lốc")
                     .price(new BigDecimal(price))
-                    .stock(random.nextInt(50) + 5) // Some might be low stock
+                    .stock(random.nextInt(50) + 5)
                     .isAvailable(true)
                     .build();
             
@@ -113,8 +164,8 @@ public class DataSeeder implements CommandLineRunner {
             if (random.nextBoolean()) {
                 ProductVariant variantL = ProductVariant.builder()
                         .product(product)
-                        .size("L")
-                        .price(new BigDecimal(price + 15000))
+                        .size("Thùng")
+                        .price(new BigDecimal(price * 10))
                         .stock(random.nextInt(30) + 2)
                         .isAvailable(true)
                         .build();

@@ -71,7 +71,7 @@ public class CouponService {
             if (coupon.getMaxDiscount() != null && discount.compareTo(coupon.getMaxDiscount()) > 0) {
                 discount = coupon.getMaxDiscount();
             }
-        } else if (coupon.getDiscountType() == DiscountType.FIXED) {
+        } else if (coupon.getDiscountType() == DiscountType.FIXED || coupon.getDiscountType() == DiscountType.FREE_SHIP) {
             discount = coupon.getDiscountValue();
         }
 

@@ -20,15 +20,17 @@
             </div>
             
             <!-- Heading -->
-            <h1 class="fw-bold mb-0 hero-title" style="letter-spacing: -1px; line-height: 1.2;">
-              <span :style="{ color: isHeroBgDark ? '#FFFFFF' : '#2D1B0E' }" style="white-space: nowrap; font-size: min(52px, 8vw); display: block; transition: color 0.3s ease;">Bánh ngọt & Đồ uống</span>
-              <span :style="{ color: isHeroBgDark ? '#FFA07A' : '#C8502A' }" style="font-size: min(52px, 8vw); display: block; transition: color 0.3s ease;">tươi mới mỗi ngày</span>
+            <h1 class="fw-bold mb-0 hero-title position-relative" style="letter-spacing: -1px; line-height: 1.2;">
+              <div class="bling-particle p1 position-absolute"><PhSparkle weight="fill" color="#FFD700" size="24" /></div>
+              <div class="bling-particle p2 position-absolute" style="top: 80%; left: 40%;"><PhSparkle weight="fill" color="#FFA07A" size="18" /></div>
+              <span :style="{ color: isHeroBgDark ? '#FFFFFF' : '#2D1B0E' }" style="white-space: nowrap; font-size: min(52px, 8vw); display: block; transition: color 0.3s ease; position: relative; z-index: 2;">Bánh hộp & Đồ uống</span>
+              <span :style="{ color: isHeroBgDark ? '#FFA07A' : '#C8502A' }" style="font-size: min(52px, 8vw); display: block; transition: color 0.3s ease; position: relative; z-index: 2;">tiện lợi mỗi ngày</span>
             </h1>
             
             <!-- Description -->
             <p class="fs-5 text-secondary mb-0 pe-lg-5" style="line-height: 1.6;">
-              Giao tận nơi trong 30 phút.<br/>
-              Làm từ nguyên liệu tươi sạch mỗi sáng.
+              Chuyên cung cấp bánh đóng hộp, thùng<br/>
+              và các loại nước giải khát đóng chai, lon cao cấp.
             </p>
             
             <!-- CTAs -->
@@ -75,7 +77,7 @@
                 <PhCheckCircle size="16" weight="fill" color="#16A34A" /> Giao trong 30 phút
               </div>
               <div class="trust-badge d-flex align-items-center gap-2 text-secondary fw-semibold small">
-                <PhLeaf size="16" weight="fill" color="#16A34A" /> Nguyên liệu tươi
+                <PhPackage size="16" weight="fill" color="#16A34A" /> Đóng gói an toàn
               </div>
               <div class="trust-badge d-flex align-items-center gap-2 text-secondary fw-semibold small">
                 <PhShieldCheck size="16" weight="fill" color="#16A34A" /> Hoàn tiền 100%
@@ -102,22 +104,43 @@
               
               <!-- Main Image -->
               <transition name="fade-image" mode="out-in">
-                <img :key="currentHeroImage" :src="currentHeroImage" alt="Sản phẩm tươi" class="hero-main-img shadow-lg cursor-pointer" @click="cycleHeroImage" title="Click để xem hình khác" />
+                <img :key="currentHeroImage" :src="currentHeroImage" alt="Sản phẩm nổi bật" class="hero-main-img shadow-lg cursor-pointer hero-breathe" @click="cycleHeroImage" title="Click để xem hình khác" />
               </transition>
               
               <!-- Floating Cards -->
               <div class="float-card card-1 shadow-sm d-flex align-items-center gap-2 px-3 py-2 rounded-pill fw-bold text-dark position-absolute">
-                <PhCake size="20" weight="fill" color="#C8502A" /> Bánh tươi
+                <PhCookie size="20" weight="fill" color="#C8502A" /> Bánh đóng hộp
               </div>
               <div class="float-card card-2 shadow-sm d-flex align-items-center gap-2 px-3 py-2 rounded-pill fw-bold text-dark position-absolute">
-                <PhCoffee size="20" weight="fill" color="#C8502A" /> Đồ uống
+                <PhCoffee size="20" weight="fill" color="#C8502A" /> Nước chai/lon
               </div>
               <div class="float-card card-3 shadow-sm d-flex align-items-center gap-2 px-3 py-2 rounded-pill fw-bold text-dark position-absolute">
-                <PhMoped size="20" weight="fill" color="#C8502A" /> 30 phút
+                <PhMoped size="20" weight="fill" color="#C8502A" /> Giao hỏa tốc
               </div>
             </div>
           </div>
         </div>
+      </div>
+    </section>
+
+    <!-- BANNER SLIDER SECTION -->
+    <section v-if="banners.length > 0" class="container py-4 reveal-on-scroll">
+      <div id="homeBannerCarousel" class="carousel slide shadow-sm rounded-4 overflow-hidden" data-bs-ride="carousel" data-bs-interval="4000">
+        <div class="carousel-inner">
+          <div v-for="(b, idx) in banners" :key="b.bannerId" :class="['carousel-item', { active: idx === 0 }]">
+            <a :href="b.link || '#'" target="_blank">
+              <img :src="b.imageUrl" class="d-block w-100 object-fit-cover" :alt="b.title || 'Banner'" style="height: 350px; cursor: pointer;">
+            </a>
+          </div>
+        </div>
+        <button v-if="banners.length > 1" class="carousel-control-prev" type="button" data-bs-target="#homeBannerCarousel" data-bs-slide="prev">
+          <span class="carousel-control-prev-icon bg-dark rounded-circle p-2" aria-hidden="true"></span>
+          <span class="visually-hidden">Previous</span>
+        </button>
+        <button v-if="banners.length > 1" class="carousel-control-next" type="button" data-bs-target="#homeBannerCarousel" data-bs-slide="next">
+          <span class="carousel-control-next-icon bg-dark rounded-circle p-2" aria-hidden="true"></span>
+          <span class="visually-hidden">Next</span>
+        </button>
       </div>
     </section>
 
@@ -151,6 +174,20 @@
       </div>
     </section>
 
+    <!-- FLASH SALE SECTION -->
+    <section v-if="saleProducts.length > 0" class="container py-4 reveal-on-scroll">
+      <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="fw-bold d-flex align-items-center gap-2 m-0" style="color: #FF4B2B;">
+          <PhFire weight="fill" size="32" /> GIÁ SỐC HÔM NAY
+        </h2>
+      </div>
+      <div class="row g-4">
+        <div v-for="product in saleProducts.slice(0, 4)" :key="product.productId" class="col-6 col-md-4 col-lg-3">
+          <ProductCard :product="product" />
+        </div>
+      </div>
+    </section>
+
     <!-- 3. CATEGORY TABS + SẢN PHẨM -->
     <section class="container py-5 py-lg-6 reveal-on-scroll">
       <div class="text-center mb-5">
@@ -162,13 +199,13 @@
             <PhFire size="20" weight="duotone" :color="activeTab === 'all' ? '#fff' : 'var(--bakery-primary)'" /> Tất cả
           </button>
           <button class="btn btn-category rounded-pill px-4 py-2 fw-semibold shadow-sm d-flex align-items-center gap-2" :class="{ 'active': activeTab === 'cake' }" @click="activeTab = 'cake'">
-            <PhCake size="20" weight="duotone" :color="activeTab === 'cake' ? '#fff' : 'var(--bakery-primary)'" /> Bánh kem
+            <PhPackage size="20" weight="duotone" :color="activeTab === 'cake' ? '#fff' : 'var(--bakery-primary)'" /> Bánh đóng hộp
           </button>
           <button class="btn btn-category rounded-pill px-4 py-2 fw-semibold shadow-sm d-flex align-items-center gap-2" :class="{ 'active': activeTab === 'pastry' }" @click="activeTab = 'pastry'">
-            <PhCookie size="20" weight="duotone" :color="activeTab === 'pastry' ? '#fff' : 'var(--bakery-primary)'" /> Bánh ngọt
+            <PhCookie size="20" weight="duotone" :color="activeTab === 'pastry' ? '#fff' : 'var(--bakery-primary)'" /> Bánh thùng
           </button>
           <button class="btn btn-category rounded-pill px-4 py-2 fw-semibold shadow-sm d-flex align-items-center gap-2" :class="{ 'active': activeTab === 'drink' }" @click="activeTab = 'drink'">
-            <PhCoffee size="20" weight="duotone" :color="activeTab === 'drink' ? '#fff' : 'var(--bakery-primary)'" /> Đồ uống
+            <PhCoffee size="20" weight="duotone" :color="activeTab === 'drink' ? '#fff' : 'var(--bakery-primary)'" /> Nước đóng chai
           </button>
           <button class="btn btn-category rounded-pill px-4 py-2 fw-semibold shadow-sm d-flex align-items-center gap-2" :class="{ 'active': activeTab === 'new' }" @click="activeTab = 'new'">
             <PhSparkle size="20" weight="duotone" :color="activeTab === 'new' ? '#fff' : 'var(--bakery-primary)'" /> Mới nhất
@@ -195,28 +232,34 @@
       <div class="row g-4 banner-grid" style="height: 320px;">
         <!-- Banner Trái (Lớn) -->
         <div class="col-md-7 h-100" v-if="activeBanners[0]">
-          <div class="promo-banner w-100 h-100 rounded-4 overflow-hidden position-relative shadow-sm" :style="{ background: `url(${activeBanners[0].imageUrl}) center/cover` }">
-            <div class="banner-overlay position-absolute w-100 h-100" style="background: linear-gradient(to top, rgba(0,0,0,0.8), transparent); bottom: 0;"></div>
-            <div class="position-absolute bottom-0 p-4 w-100 text-white z-1">
-              <h3 class="fw-bold mb-2 d-flex align-items-center">
-                 {{ activeBanners[0].title }}
-              </h3>
-              <a v-if="activeBanners[0].link" :href="activeBanners[0].link" class="btn btn-light rounded-pill px-4 fw-bold btn-sm shadow d-inline-flex align-items-center gap-1">
-                Xem ngay <PhArrowRight size="16" weight="bold" />
-              </a>
+          <div class="promo-banner w-100 h-100 rounded-4 overflow-hidden position-relative shadow-sm">
+            <div class="promo-banner-inner position-absolute" style="top: 4px; left: 4px; right: 4px; bottom: 4px; border-radius: calc(1rem - 4px); overflow: hidden; z-index: 1; background: var(--bg-surface);">
+              <div class="promo-banner-bg position-absolute w-100 h-100" :style="{ background: `url(${activeBanners[0].imageUrl}) center/cover` }"></div>
+              <div class="banner-overlay position-absolute w-100 h-100" style="background: linear-gradient(to top, rgba(0,0,0,0.7), transparent); bottom: 0;"></div>
+              <div class="banner-content position-absolute bottom-0 p-4 w-100 text-white z-1">
+                <h3 class="fw-bold mb-2 d-flex align-items-center">
+                   {{ activeBanners[0].title }}
+                </h3>
+                <a v-if="activeBanners[0].link" :href="activeBanners[0].link" class="btn btn-light rounded-pill px-4 fw-bold btn-sm shadow d-inline-flex align-items-center gap-1">
+                  Xem ngay <PhArrowRight size="16" weight="bold" />
+                </a>
+              </div>
             </div>
           </div>
         </div>
         
         <!-- Các Banner Phải (Nhỏ) -->
         <div class="col-md-5 h-100 d-flex flex-column gap-4" v-if="activeBanners.length > 1">
-          <div v-for="b in activeBanners.slice(1, 3)" :key="b.bannerId" class="promo-banner w-100 rounded-4 overflow-hidden position-relative shadow-sm flex-grow-1" :style="{ background: `url(${b.imageUrl}) center/cover` }">
-            <div class="banner-overlay position-absolute w-100 h-100" style="background: rgba(0,0,0,0.4);"></div>
-            <a v-if="b.link" :href="b.link" class="position-absolute w-100 h-100 text-decoration-none"></a>
-            <div class="position-absolute w-100 h-100 d-flex flex-column justify-content-center align-items-center text-white z-1 pointer-events-none">
-              <h4 class="fw-bold mb-1 px-3 text-center text-shadow-sm">
-                {{ b.title }}
-              </h4>
+          <div v-for="b in activeBanners.slice(1, 3)" :key="b.bannerId" class="promo-banner w-100 rounded-4 overflow-hidden position-relative shadow-sm flex-grow-1">
+            <div class="promo-banner-inner position-absolute" style="top: 4px; left: 4px; right: 4px; bottom: 4px; border-radius: calc(1rem - 4px); overflow: hidden; z-index: 1; background: var(--bg-surface);">
+              <div class="promo-banner-bg position-absolute w-100 h-100" :style="{ background: `url(${b.imageUrl}) center/cover` }"></div>
+              <div class="banner-overlay position-absolute w-100 h-100" style="background: rgba(0,0,0,0.3);"></div>
+              <a v-if="b.link" :href="b.link" class="position-absolute w-100 h-100 text-decoration-none z-2"></a>
+              <div class="banner-content position-absolute w-100 h-100 d-flex flex-column justify-content-center align-items-center text-white z-1 pointer-events-none">
+                <h4 class="fw-bold mb-1 px-3 text-center text-shadow-sm">
+                  {{ b.title }}
+                </h4>
+              </div>
             </div>
           </div>
         </div>
@@ -224,17 +267,24 @@
     </section>
 
     <!-- 5. HOW IT WORKS -->
-    <section class="py-5 py-lg-6 reveal-on-scroll" style="background: var(--bg-surface)">
-      <div class="container text-center">
-        <h2 class="fw-bold mb-5 d-flex align-items-center justify-content-center">
+    <section class="py-5 py-lg-6 reveal-on-scroll position-relative" style="background: var(--bg-surface)">
+      <!-- Bling Bling particles -->
+      <div class="bling-particle p1 position-absolute"><PhSparkle weight="fill" color="#FFD700" size="24" /></div>
+      <div class="bling-particle p2 position-absolute"><PhSparkle weight="fill" color="#FFA07A" size="16" /></div>
+      <div class="bling-particle p3 position-absolute"><PhSparkle weight="fill" color="#FFD700" size="20" /></div>
+      
+      <div class="container text-center position-relative z-1">
+        <h2 class="fw-bold mb-5 d-flex align-items-center justify-content-center animate-fade-up">
           Đặt hàng chỉ 3 bước <PhRocket size="32" weight="fill" color="#C8502A" class="ms-2" />
         </h2>
         <div class="row position-relative">
           <!-- Line connecting steps (Desktop only) -->
-          <div class="d-none d-md-block position-absolute" style="top: 40px; left: 16%; right: 16%; height: 2px; border-top: 2px dashed #ddd; z-index: 0;"></div>
+          <div class="d-none d-md-block position-absolute step-line-container" style="top: 40px; left: 16.6666%; width: 66.6666%; height: 3px; background-color: var(--border-color); border-radius: 2px; overflow: hidden; z-index: 0;">
+            <div class="step-line-fill w-100 h-100" style="background-color: var(--bakery-primary);"></div>
+          </div>
           
-          <div class="col-md-4 mb-4 mb-md-0 position-relative z-1">
-            <div class="step-icon-wrapper bg-white mx-auto shadow-sm d-flex align-items-center justify-content-center mb-3 position-relative">
+          <div class="col-md-4 mb-4 mb-md-0 position-relative z-1 animate-stagger" style="transition-delay: 0.1s">
+            <div class="step-icon-wrapper bg-white mx-auto shadow-sm d-flex align-items-center justify-content-center mb-3 position-relative transition-hover" style="border: 6px solid var(--bg-surface); box-sizing: content-box;">
               <PhShoppingCart size="32" color="var(--bakery-primary)" weight="duotone" />
               <div class="step-number bg-bakery text-white rounded-circle position-absolute fw-bold">1</div>
             </div>
@@ -242,8 +292,8 @@
             <p class="text-secondary small mx-auto" style="max-width: 200px;">Duyệt menu, thêm vào giỏ hàng</p>
           </div>
           
-          <div class="col-md-4 mb-4 mb-md-0 position-relative z-1">
-            <div class="step-icon-wrapper bg-white mx-auto shadow-sm d-flex align-items-center justify-content-center mb-3 position-relative">
+          <div class="col-md-4 mb-4 mb-md-0 position-relative z-1 animate-stagger" style="transition-delay: 0.3s">
+            <div class="step-icon-wrapper bg-white mx-auto shadow-sm d-flex align-items-center justify-content-center mb-3 position-relative transition-hover" style="border: 5px solid var(--bg-surface); box-sizing: content-box;">
               <PhMapPin size="32" color="var(--bakery-primary)" weight="duotone" />
               <div class="step-number bg-bakery text-white rounded-circle position-absolute fw-bold">2</div>
             </div>
@@ -251,8 +301,8 @@
             <p class="text-secondary small mx-auto" style="max-width: 200px;">Điền thông tin chỉ 1 phút</p>
           </div>
           
-          <div class="col-md-4 position-relative z-1">
-            <div class="step-icon-wrapper bg-white mx-auto shadow-sm d-flex align-items-center justify-content-center mb-3 position-relative">
+          <div class="col-md-4 position-relative z-1 animate-stagger" style="transition-delay: 0.5s">
+            <div class="step-icon-wrapper bg-white mx-auto shadow-sm d-flex align-items-center justify-content-center mb-3 position-relative transition-hover" style="border: 5px solid var(--bg-surface); box-sizing: content-box;">
               <PhMoped size="32" color="var(--bakery-primary)" weight="duotone" />
               <div class="step-number bg-bakery text-white rounded-circle position-absolute fw-bold">3</div>
             </div>
@@ -260,8 +310,8 @@
             <p class="text-secondary small mx-auto" style="max-width: 200px;">Shipper giao trong 30 phút</p>
           </div>
         </div>
-        <div class="mt-5">
-          <router-link to="/products" class="btn btn-bakery rounded-pill px-5 py-3 fw-bold shadow-sm fs-5">Bắt đầu đặt hàng →</router-link>
+        <div class="mt-5 animate-fade-up" style="transition-delay: 0.6s">
+          <router-link to="/products" class="btn btn-bakery rounded-pill px-5 py-3 fw-bold shadow-sm fs-5 transition-hover d-inline-block">Bắt đầu đặt hàng →</router-link>
         </div>
       </div>
     </section>
@@ -380,7 +430,7 @@
             <span>{{ f.q }}</span>
             <PhCaretDown class="faq-chevron" size="20" weight="bold" />
           </button>
-          <div class="faq-answer"><p class="mb-0 pt-1">{{ f.a }}</p></div>
+          <div class="faq-answer"><div class="faq-inner"><p class="mb-0">{{ f.a }}</p></div></div>
         </div>
       </div>
     </section>
@@ -398,7 +448,7 @@ import { ref, onMounted, onUnmounted, computed, nextTick } from 'vue'
 import { productApi } from '@/api/product.api'
 import ProductCard from '@/components/ProductCard.vue'
 import { 
-  PhStorefront, PhShoppingCart, PhList, PhClock, PhLeaf, PhShieldCheck, 
+  PhStorefront, PhShoppingCart, PhList, PhClock, PhLeaf, PhPackage, PhShieldCheck, 
   PhFire, PhCake, PhCookie, PhCoffee, PhSparkle, PhMapPin, PhMoped, 
   PhStar, PhRocket, PhHeart, PhInstagramLogo, PhBag, PhBookOpen, PhCheckCircle, PhArrowRight,
   PhCaretDown, PhArrowUp
@@ -432,10 +482,10 @@ function animateStats() {
 const openFaq = ref(0)
 function toggleFaq(i) { openFaq.value = openFaq.value === i ? -1 : i }
 const faqs = [
-  { q: 'Brevery giao hàng trong bao lâu?', a: 'Đơn nội thành thường được giao trong vòng 30 phút. Vào giờ cao điểm có thể lâu hơn một chút, nhưng chúng tôi luôn cập nhật trạng thái đơn theo thời gian thực.' },
-  { q: 'Tôi có thể đặt bánh sinh nhật theo yêu cầu không?', a: 'Có. Bạn có thể để lại ghi chú khi đặt hàng hoặc liên hệ trực tiếp; đội ngũ của chúng tôi sẽ tư vấn mẫu bánh, hương vị và thông điệp trên bánh.' },
-  { q: 'Nguyên liệu có tươi mỗi ngày không?', a: 'Tất cả bánh được làm mới mỗi sáng từ nguyên liệu chọn lọc. Chúng tôi không bán bánh tồn của ngày hôm trước.' },
-  { q: 'Chính sách hoàn tiền như thế nào?', a: 'Nếu bạn chưa hài lòng về chất lượng sản phẩm, chúng tôi hoàn tiền 100% hoặc đổi sản phẩm mới — không cần lý do phức tạp.' },
+  { q: 'Brevery giao hàng trong bao lâu?', a: 'Đơn nội thành thường được giao trong vòng 30 phút. Đối với các đơn hàng số lượng lớn (thùng), thời gian giao hàng có thể lâu hơn một chút để đảm bảo đóng gói an toàn.' },
+  { q: 'Tôi có thể mua sỉ theo thùng không?', a: 'Có. Brevery chuyên cung cấp bánh và nước đóng theo hộp, thùng với chiết khấu vô cùng hấp dẫn cho khách hàng mua số lượng lớn.' },
+  { q: 'Sản phẩm có hạn sử dụng lâu không?', a: 'Tất cả các sản phẩm bánh hộp, thùng và nước chai, lon của chúng tôi đều được kiểm định khắt khe và có hạn sử dụng in rõ trên bao bì, luôn đảm bảo date mới nhất.' },
+  { q: 'Chính sách đổi trả như thế nào?', a: 'Nếu bạn nhận được hộp hoặc lon bị móp méo, hư hỏng trong quá trình vận chuyển, chúng tôi sẽ hoàn tiền 100% hoặc đổi sản phẩm mới ngay lập tức.' },
 ]
 
 // --- Dynamic Contrast & 3D Parallax Tilt ---
@@ -486,17 +536,35 @@ function handleScroll() {
 function scrollToTop() { window.scrollTo({ top: 0, behavior: 'smooth' }) }
 
 // --- Hero Image Cycle Logic ---
-const heroImages = ['/images/cake.png', '/images/drink.png', '/images/banner.png']
+const heroImages = ref(['/images/cake.png', '/images/drink.png'])
 const currentHeroImageIndex = ref(0)
-const currentHeroImage = computed(() => heroImages[currentHeroImageIndex.value])
+const currentHeroImage = computed(() => heroImages.value[currentHeroImageIndex.value] || '/images/cake.png')
 
 function cycleHeroImage() {
-  currentHeroImageIndex.value = (currentHeroImageIndex.value + 1) % heroImages.length
+  if (heroImages.value.length === 0) return
+  currentHeroImageIndex.value = (currentHeroImageIndex.value + 1) % heroImages.value.length
+}
+
+let heroInterval = null
+
+// --- Banners Logic ---
+const banners = ref([])
+
+async function fetchBanners() {
+  try {
+    const { data } = await productApi.getBanners()
+    const activeBanners = data.data?.filter(b => b.isActive !== false).sort((a,b) => a.position - b.position)
+    if (activeBanners && activeBanners.length > 0) {
+      banners.value = activeBanners
+    }
+  } catch { /* silent */ }
 }
 
 // --- Category Tabs Logic ---
 const activeTab = ref('all')
 const topProducts = ref([])
+const saleProducts = computed(() => topProducts.value.filter(p => p.minSalePrice != null))
+
 const displayedProducts = computed(() => {
   // Demo filter logic using the topProducts array
   if (topProducts.value.length === 0) return []
@@ -513,11 +581,11 @@ const maxSlides = computed(() => testimonials.length - (100 / slideWidth.value) 
 let slideInterval = null
 
 const testimonials = [
-  { name: 'Nguyễn T.', location: 'Q.1', text: 'Bánh kem siêu ngon, cốt bánh xốp mềm không bị ngọt gắt. Giao hàng cực kỳ cẩn thận không hề bị méo!', product: 'Bánh Sinh Nhật Dâu Tây' },
-  { name: 'Trần H.', location: 'Q.Bình Thạnh', text: 'Cà phê thơm lừng, shipper giao đến nơi đá vẫn chưa tan. Mình gọi vào giờ cao điểm nhưng chỉ 20p là có.', product: 'Cà phê Sữa Đá' },
-  { name: 'Lê M.', location: 'Q.7', text: 'Bao bì thân thiện môi trường, nhìn rất sang. Bánh sừng trâu thơm mùi bơ, ăn sáng với trà nóng là chuẩn bài.', product: 'Bánh Croissant' },
-  { name: 'Phạm Q.', location: 'Q.3', text: 'Đặt bánh kem gấp để tặng sinh nhật sếp mà Brevery vẫn xử lý kịp trong 2 tiếng. Rất cảm ơn shop!', product: 'Bánh Tiramisu Ý' },
-  { name: 'Hoàng V.', location: 'Q.Phú Nhuận', text: 'Trà sữa trân châu dẻo mềm, vị trà đậm đà không bị lấn át bởi sữa. Đã trở thành khách ruột của quán.', product: 'Trà Sữa Truyền Thống' }
+  { name: 'Nguyễn T.', location: 'Q.1', text: 'Thùng bánh đóng gói vô cùng cẩn thận, hộp bánh bên trong còn nguyên vẹn không hề bị móp. Giao hàng cực nhanh!', product: 'Thùng Bánh Quy Trộn Vị' },
+  { name: 'Trần H.', location: 'Q.Bình Thạnh', text: 'Nước trái cây đóng chai rất tiện, ướp lạnh sẵn shipper giao đến vẫn còn lạnh buốt. Mua cả lốc để tủ lạnh uống dần rất tuyệt.', product: 'Lốc 6 Chai Trà Đào' },
+  { name: 'Lê M.', location: 'Q.7', text: 'Hộp bánh thiết kế sang trọng, rất hợp để làm quà biếu đối tác. Chất lượng bánh xốp mềm, vị ngọt thanh không bị gắt.', product: 'Hộp Bánh Quy Bơ Pháp' },
+  { name: 'Phạm Q.', location: 'Q.3', text: 'Đặt gấp mấy thùng nước và hộp bánh để liên hoan văn phòng mà Brevery giao chưa tới 30 phút. Rất hài lòng!', product: 'Combo Liên Hoan' },
+  { name: 'Hoàng V.', location: 'Q.Phú Nhuận', text: 'Cà phê đóng lon vị rất đậm đà, tiện mang theo đi làm mỗi sáng. Ngày nào cũng phải đặt một lốc.', product: 'Lốc 4 Lon Cà Phê Sữa' }
 ]
 
 function handleResize() {
@@ -544,6 +612,14 @@ onMounted(async () => {
     const bannerRes = await productApi.getBanners()
     activeBanners.value = bannerRes.data.data || []
   } catch { /* silent */ }
+
+  if (activeBanners.value.length === 0) {
+    activeBanners.value = [
+      { bannerId: 1, title: 'Bánh đóng hộp cao cấp nhập khẩu', imageUrl: 'https://images.unsplash.com/photo-1621939514649-280e2ee25f60?auto=format&fit=crop&q=80', link: '/products' },
+      { bannerId: 2, title: 'Thùng bánh mix vị ưu đãi 20%', imageUrl: 'https://images.unsplash.com/photo-1558961363-fa8fdf82db35?auto=format&fit=crop&q=80', link: '/products' },
+      { bannerId: 3, title: 'Nước giải khát đóng chai/lon', imageUrl: 'https://images.unsplash.com/photo-1622483767028-3f66f32aef97?auto=format&fit=crop&q=80', link: '/products' }
+    ]
+  }
 
   // Fetch Products
   try {
@@ -587,6 +663,8 @@ onMounted(async () => {
   // Scroll progress + back-to-top
   window.addEventListener('scroll', handleScroll, { passive: true })
   handleScroll()
+  
+  heroInterval = setInterval(cycleHeroImage, 4000)
 
   // Dynamic Contrast Detection
   let themeMutationObserver = null;
@@ -606,9 +684,10 @@ onMounted(async () => {
 })
 
 onUnmounted(() => {
-  window.removeEventListener('resize', handleResize)
   window.removeEventListener('scroll', handleScroll)
+  window.removeEventListener('resize', handleResize)
   clearInterval(slideInterval)
+  if (heroInterval) clearInterval(heroInterval)
   if (observer) observer.disconnect()
 })
 </script>
@@ -687,6 +766,14 @@ onUnmounted(() => {
   display: flex;
   align-items: center;
   justify-content: center;
+}
+
+.hero-breathe {
+  animation: hero-breathe 8s ease-in-out infinite alternate;
+}
+@keyframes hero-breathe {
+  0% { transform: translateY(0) scale(1); }
+  100% { transform: translateY(-15px) scale(1.03); filter: drop-shadow(0 20px 30px rgba(0,0,0,0.15)); }
 }
 
 .hero-main-img {
@@ -810,6 +897,29 @@ onUnmounted(() => {
   transform: translateY(0);
 }
 
+.step-line-fill {
+  transform-origin: left;
+  transform: scaleX(0);
+  transition: transform 1.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  transition-delay: 0.4s;
+}
+.reveal-on-scroll.visible .step-line-fill {
+  transform: scaleX(1);
+}
+
+.bling-particle {
+  pointer-events: none;
+  animation: bling-pulse 3s infinite alternate ease-in-out;
+}
+.bling-particle.p1 { top: -20px; left: 25%; animation-delay: 0s; }
+.bling-particle.p2 { bottom: -20px; right: 25%; animation-delay: 1.5s; animation-duration: 4s; }
+.bling-particle.p3 { top: 40%; right: 10%; animation-delay: 0.7s; animation-duration: 3.5s; }
+
+@keyframes bling-pulse {
+  0% { transform: scale(0.6) rotate(0deg); opacity: 0.4; filter: drop-shadow(0 0 2px var(--bakery-primary)); }
+  100% { transform: scale(1.3) rotate(30deg); opacity: 1; filter: drop-shadow(0 0 12px var(--bakery-primary)); }
+}
+
 /* CATEGORY TABS */
 .btn-category {
   background: var(--bg-surface);
@@ -832,16 +942,54 @@ onUnmounted(() => {
 
 /* PROMO BANNERS */
 .promo-banner {
-  transition: transform 0.3s ease;
+  cursor: pointer;
+  background: rgba(200, 80, 42, 0.1); /* Subtle tint when not hovered */
 }
-.promo-banner:hover {
-  transform: scale(1.02);
+.promo-banner::before {
+  content: "";
+  position: absolute;
+  top: -100%; left: -100%;
+  width: 300%; height: 300%;
+  background: conic-gradient(from 0deg, transparent 50%, var(--bakery-primary) 85%, #FFA07A 100%);
+  animation: spin-glow 2.5s linear infinite;
+  opacity: 0;
+  transition: opacity 0.4s ease;
+  z-index: 0;
+}
+.promo-banner:hover::before {
+  opacity: 1;
+}
+@keyframes spin-glow {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.promo-banner-bg {
+  transform: scale(1);
+  transition: transform 0.6s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+.banner-overlay {
+  transition: opacity 0.4s ease;
+}
+.banner-content {
+  transform: translateY(0);
+  transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+.promo-banner:hover .promo-banner-bg {
+  transform: scale(1.06);
+}
+.promo-banner:hover .banner-overlay {
+  opacity: 0.8;
+}
+.promo-banner:hover .banner-content {
+  transform: translateY(-4px);
 }
 
 /* HOW IT WORKS */
 .step-icon-wrapper {
   width: 80px; height: 80px;
   border-radius: 50%;
+  background-clip: padding-box;
 }
 .step-number {
   width: 24px; height: 24px;

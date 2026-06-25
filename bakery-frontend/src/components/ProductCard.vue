@@ -1,5 +1,5 @@
 <template>
-  <div class="magic-product-card h-100" @click="$router.push({ name: 'product-detail', params: { id: product.productId } })">
+  <div class="magic-product-card h-100" :class="{ 'on-sale': product.minSalePrice }" @click="$router.push({ name: 'product-detail', params: { id: product.productId } })">
     <div class="magic-product-card-info position-relative h-100 d-flex flex-column">
       
       <!-- TOP LEFT BADGE -->
@@ -21,6 +21,13 @@
 
       <!-- IMAGE WRAPPER -->
       <div class="product-img-wrapper position-relative">
+        <!-- CENTRAL SALE BADGE -->
+        <div v-if="product.minSalePrice" class="position-absolute start-50 translate-middle-x z-3" style="top: -10px;">
+          <div class="badge rounded-pill shadow-lg d-inline-flex align-items-center gap-1 text-white sale-pulse-heavy px-3 py-2 fs-6 border border-light" style="background: linear-gradient(135deg, #FF416C, #FF4B2B);">
+            <PhFire size="16" weight="fill" color="#fff" /> GIÁ SỐC
+          </div>
+        </div>
+        
         <img :src="product.primaryImageUrl || '/images/cake.png'" :alt="product.name" class="product-card-img w-100" />
         <!-- OVERLAY QUICK VIEW -->
         <div class="quick-view-overlay d-flex align-items-center justify-content-center">
@@ -46,7 +53,11 @@
         </div>
 
         <div class="mt-auto pt-2">
-          <div class="fs-5 fw-bold mb-3" style="color: var(--card-dark-accent);">{{ formatPrice(product.minPrice) }}</div>
+          <div v-if="product.minSalePrice" class="fs-5 fw-bold mb-3 d-flex align-items-center gap-2">
+            <span style="color: var(--card-dark-accent);">{{ formatPrice(product.minSalePrice) }}</span>
+            <span class="text-decoration-line-through small text-muted">{{ formatPrice(product.minPrice) }}</span>
+          </div>
+          <div v-else class="fs-5 fw-bold mb-3" style="color: var(--card-dark-accent);">{{ formatPrice(product.minPrice) }}</div>
           
           <button 
             class="btn btn-bakery w-100 fw-bold d-flex align-items-center justify-content-center gap-2 position-relative overflow-hidden" 
@@ -56,7 +67,9 @@
                 <PhCheckCircle size="20" weight="fill" /> Đã thêm
               </span>
               <span v-else class="d-flex align-items-center gap-2">
-                <PhShoppingCart size="20" weight="bold" /> GIỎ HÀNG
+                <PhShoppingCart v-if="!product.hasMultipleVariants" size="20" weight="bold" />
+                <PhList v-else size="20" weight="bold" />
+                {{ product.hasMultipleVariants ? 'CHỌN LOẠI' : 'GIỎ HÀNG' }}
               </span>
             </transition>
           </button>
@@ -68,13 +81,15 @@
 
 <script setup>
 import { ref, onMounted } from 'vue'
-import { PhStar, PhHeart, PhEye, PhShoppingCart, PhCheckCircle, PhTrendUp, PhSparkle } from '@phosphor-icons/vue'
+import { useRouter } from 'vue-router'
+import { PhStar, PhHeart, PhEye, PhShoppingCart, PhList, PhCheckCircle, PhTrendUp, PhSparkle, PhFire } from '@phosphor-icons/vue'
 import { useCartStore } from '@/stores/cart.store'
 import { toast } from 'vue3-toastify'
 
 const props = defineProps({ product: { type: Object, required: true } })
 
 const cartStore = useCartStore()
+const router = useRouter()
 const isLiked = ref(false)
 const heartPop = ref(false)
 const showCheckmark = ref(false)
@@ -115,12 +130,17 @@ function toggleHeart() {
 async function handleAddToCart() {
   if (showCheckmark.value) return; // Đang thêm
 
+  if (props.product.hasMultipleVariants) {
+    router.push({ name: 'product-detail', params: { id: props.product.productId } })
+    return
+  }
+
   try {
     await cartStore.addToCart({
       productId: props.product.productId,
-      variantId: props.product.productId, // Fallback nếu API cần variantId
+      variantId: props.product.defaultVariantId || props.product.productId,
       name: props.product.name,
-      price: props.product.minPrice || props.product.price,
+      price: props.product.minSalePrice || props.product.minPrice || props.product.price,
       image: props.product.primaryImageUrl,
       quantity: 1
     })
@@ -148,6 +168,9 @@ async function handleAddToCart() {
   transform-style: preserve-3d;
   perspective: 1000px;
   transition: all 0.45s var(--ease-spring);
+}
+.magic-product-card.on-sale {
+  --background: linear-gradient(135deg, #E11D48 0%, #F43F5E 100%);
 }
 .magic-product-card::after {
   position: absolute;
@@ -269,5 +292,22 @@ async function handleAddToCart() {
     transition: none !important;
     transform: none !important;
   }
+}
+
+@keyframes sale-pulse {
+  0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(225, 29, 72, 0.7); }
+  50% { transform: scale(1.05); box-shadow: 0 0 0 6px rgba(225, 29, 72, 0); }
+  100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(225, 29, 72, 0); }
+}
+@keyframes sale-pulse-heavy {
+  0% { transform: translateX(-50%) scale(1); box-shadow: 0 0 0 0 rgba(255, 65, 108, 0.8); }
+  50% { transform: translateX(-50%) scale(1.1); box-shadow: 0 0 0 10px rgba(255, 65, 108, 0); }
+  100% { transform: translateX(-50%) scale(1); box-shadow: 0 0 0 0 rgba(255, 65, 108, 0); }
+}
+.sale-pulse {
+  animation: sale-pulse 2s infinite;
+}
+.sale-pulse-heavy {
+  animation: sale-pulse-heavy 1.5s infinite;
 }
 </style>

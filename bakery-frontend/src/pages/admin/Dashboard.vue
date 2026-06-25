@@ -83,22 +83,21 @@
                 <span class="small" style="color: var(--color-success); font-weight: 600;">● Đang hoạt động</span>
               </div>
             </div>
-            <button class="btn btn-sm border-0 p-2 rounded-3" style="background: var(--bg-muted); color: var(--text-sub)" @click="clearAdminChat" title="Xóa lịch sử">
-              <PhArrowsClockwise size="16" />
-            </button>
+            <div class="d-flex gap-2">
+              <button class="btn btn-sm border-0 p-2 rounded-3" style="background: var(--bg-muted); color: var(--text-sub)" @click="refreshAnalysis" title="Phân tích lại" :disabled="adminChatLoading">
+                <PhArrowsClockwise size="16" :class="{ 'spin': adminChatLoading && adminChatMessages.length <= 1 }" />
+              </button>
+            </div>
           </div>
 
           <div class="chat-messages" ref="adminChatRef" style="flex: 1; overflow-y: auto; padding-right: 8px; margin-bottom: 10px; display: flex; flex-direction: column; gap: 10px;">
-            <!-- Welcome message -->
-            <div class="d-flex gap-2 align-items-start">
+            <!-- Auto Analysis Loading -->
+            <div v-if="adminChatLoading && adminChatMessages.length === 0" class="d-flex gap-2 align-items-start">
               <img src="/images/logoAI.png" alt="Yuni" class="chat-avatar" />
-              <div>
-                <div class="msg-bubble msg-bot p-2 px-3 rounded-3">
-                  Chào sếp! Em là Yuni — trợ lý kinh doanh của Brevery 📊 Sếp có thể hỏi em về doanh thu, đơn hàng, tồn kho hoặc chọn nhanh bên dưới:
-                </div>
-                <!-- Quick prompts -->
-                <div v-if="adminChatMessages.length === 0" class="quick-prompts mt-2">
-                  <button v-for="q in quickPrompts" :key="q" class="quick-btn" @click="sendQuickMsg(q)">{{ q }}</button>
+              <div class="msg-bubble msg-bot p-2 px-3 rounded-3">
+                <div class="d-flex align-items-center gap-2">
+                  <span class="typing-dots"><span></span><span></span><span></span></span>
+                  <span class="small" style="color: var(--text-sub)">Yuni đang phân tích dữ liệu kinh doanh...</span>
                 </div>
               </div>
             </div>
@@ -107,8 +106,15 @@
               <img v-if="msg.role === 'bot'" src="/images/logoAI.png" alt="Yuni" class="chat-avatar" />
               <div class="msg-bubble p-2 px-3 rounded-3" :class="msg.role === 'user' ? 'msg-user' : 'msg-bot'" v-html="msg.content"></div>
             </div>
+            <!-- Quick prompts after initial analysis -->
+            <div v-if="adminChatMessages.length === 1 && !adminChatLoading" class="d-flex gap-2 align-items-start">
+              <div style="width: 28px; flex-shrink: 0;"></div>
+              <div class="quick-prompts">
+                <button v-for="q in quickPrompts" :key="q" class="quick-btn" @click="sendQuickMsg(q)">{{ q }}</button>
+              </div>
+            </div>
             <!-- Typing indicator -->
-            <div v-if="adminChatLoading" class="d-flex gap-2 align-items-start">
+            <div v-if="adminChatLoading && adminChatMessages.length > 0" class="d-flex gap-2 align-items-start">
               <img src="/images/logoAI.png" alt="Yuni" class="chat-avatar" />
               <div class="msg-bubble msg-bot p-2 px-3 rounded-3">
                 <span class="typing-dots"><span></span><span></span><span></span></span>
@@ -117,7 +123,7 @@
           </div>
           
           <div class="d-flex gap-2">
-            <input v-model="adminChatInput" @keyup.enter="sendAdminMsg" class="form-control form-control-sm border-0" style="background: var(--bg-muted); box-shadow: none; color: var(--text-main);" placeholder="Hỏi Yuni về doanh thu, đơn hàng, tồn kho..." :disabled="adminChatLoading" />
+            <input v-model="adminChatInput" @keyup.enter="sendAdminMsg" class="form-control form-control-sm border-0" style="background: var(--bg-muted); box-shadow: none; color: var(--text-main);" placeholder="Hỏi Yuni thêm về kinh doanh, chiến lược..." :disabled="adminChatLoading" />
             <button class="btn btn-sm text-white px-3" style="background: var(--primary); border-radius: var(--radius-btn);" @click="sendAdminMsg" :disabled="adminChatLoading || !adminChatInput.trim()">Gửi</button>
           </div>
         </div>
@@ -377,15 +383,39 @@ async function fetchChart() {
 import api from '@/api/axiosInstance'
 
 const quickPrompts = [
-  '📊 Tóm tắt hôm nay',
-  '💰 Doanh thu tháng này',
-  '📦 Đơn chờ duyệt',
-  '⚠️ Cảnh báo tồn kho',
+  '💡 Gợi ý chiến lược tăng doanh thu',
+  '📦 Phân tích đơn hàng bị huỷ',
+  '🏆 Sản phẩm nào nên đẩy mạnh?',
+  '⚠️ Rủi ro cần xử lý gấp',
 ]
 
 function sendQuickMsg(msg) {
   adminChatInput.value = msg
   sendAdminMsg()
+}
+
+async function fetchAutoAnalysis() {
+  adminChatLoading.value = true
+  try {
+    const { data } = await api.post('/ai/chat', { message: 'Hãy tự động phân tích toàn bộ tình hình kinh doanh hiện tại của cửa hàng Brevery. Đưa ra tóm tắt doanh thu, đơn hàng, tồn kho, đánh giá khách hàng. Sau đó đưa ra 3 lời khuyên cụ thể và hành động cần làm ngay hôm nay.', admin: true })
+    const reply = data.data?.reply || data.data || 'Chào sếp! Em chưa lấy được dữ liệu. Sếp thử bấm nút làm mới nhé!'
+    const htmlReply = formatAiReply(reply)
+    adminChatMessages.value.push({ role: 'bot', content: htmlReply })
+  } catch (err) {
+    adminChatMessages.value.push({ role: 'bot', content: 'Chào sếp! 📊 Hiện tại em chưa kết nối được bộ não AI. Sếp có thể hỏi em trực tiếp bên dưới nhé!' })
+  } finally {
+    adminChatLoading.value = false
+    scrollToBottom()
+  }
+}
+
+function formatAiReply(reply) {
+  return reply
+    .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+    .replace(/^### (.+)$/gm, '<h6 class="fw-bold mt-2 mb-1" style="color: var(--primary)">$1</h6>')
+    .replace(/^## (.+)$/gm, '<h5 class="fw-bold mt-3 mb-1" style="color: var(--primary)">$1</h5>')
+    .replace(/^- (.+)$/gm, '<span class="d-block ps-2" style="border-left: 2px solid var(--primary); margin-bottom: 4px;">$1</span>')
+    .replace(/\n/g, '<br>')
 }
 
 async function sendAdminMsg() {
@@ -399,8 +429,7 @@ async function sendAdminMsg() {
   try {
     const { data } = await api.post('/ai/chat', { message: msg, admin: true })
     const reply = data.data?.reply || data.data || 'Xin lỗi sếp, em gặp sự cố.'
-    // Convert markdown-like formatting to HTML
-    const htmlReply = reply.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>').replace(/\n/g, '<br>')
+    const htmlReply = formatAiReply(reply)
     adminChatMessages.value.push({ role: 'bot', content: htmlReply })
   } catch (err) {
     adminChatMessages.value.push({ role: 'bot', content: 'Rất tiếc sếp, có lỗi kết nối. Vui lòng thử lại.' })
@@ -410,8 +439,9 @@ async function sendAdminMsg() {
   }
 }
 
-function clearAdminChat() {
+function refreshAnalysis() {
   adminChatMessages.value = []
+  fetchAutoAnalysis()
 }
 
 function scrollToBottom() {
@@ -425,6 +455,7 @@ function retryAll() {
 
 onMounted(() => {
   fetchAll(); fetchChart();
+  fetchAutoAnalysis()
   refreshTimer = setInterval(fetchAll, 30000)
 })
 onUnmounted(() => { clearInterval(refreshTimer); if (chartInstance) chartInstance.destroy() })

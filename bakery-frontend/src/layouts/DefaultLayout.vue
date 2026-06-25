@@ -175,39 +175,69 @@
     </div>
 
     <!-- FOOTER -->
-    <footer class="bakery-footer">
+    <footer class="bakery-footer pt-5">
       <div class="container">
-        <div class="row g-4 py-5">
-          <div class="col-lg-4">
-            <div class="d-flex align-items-center gap-2 mb-3">
+        <div class="row g-4 mb-5">
+          <div class="col-lg-4 pe-lg-5">
+            <router-link to="/" class="d-inline-block text-decoration-none mb-3">
               <span class="logo-text-footer">Brevery</span>
+            </router-link>
+            <p class="text-white-50 mb-4 lh-lg" style="font-size: 0.95rem;">
+              Chuyên phân phối các sản phẩm bánh kẹo cao cấp, nội địa và nhập khẩu cùng thức uống giải khát đóng chai tiện lợi. Đem lại trải nghiệm mua sắm nhanh chóng, chất lượng.
+            </p>
+            <div class="d-flex gap-3">
+              <a href="#" class="social-icon-btn"><PhFacebookLogo size="22" weight="fill"/></a>
+              <a href="#" class="social-icon-btn"><PhInstagramLogo size="22" weight="fill"/></a>
+              <a href="#" class="social-icon-btn"><PhTiktokLogo size="22" weight="fill"/></a>
             </div>
-            <p class="text-white-50 mb-0">Bánh ngọt & đồ uống tươi mới mỗi ngày.<br/>Giao hàng tận nơi tại TP.HCM.</p>
           </div>
+          
           <div class="col-6 col-lg-2">
-            <h6 class="text-white mb-3">Liên kết</h6>
+            <h6 class="footer-heading">Về Brevery</h6>
             <ul class="list-unstyled footer-links">
               <li><router-link to="/">Trang chủ</router-link></li>
-              <li><router-link to="/products">Sản phẩm</router-link></li>
-              <li><router-link to="/track">Tra cứu đơn</router-link></li>
+              <li><router-link to="/products">Cửa hàng</router-link></li>
+              <li><router-link to="/about">Câu chuyện thương hiệu</router-link></li>
               <li><router-link to="/contact">Liên hệ</router-link></li>
             </ul>
           </div>
+          
           <div class="col-6 col-lg-3">
-            <h6 class="text-white mb-3">Liên hệ</h6>
+            <h6 class="footer-heading">Hỗ trợ khách hàng</h6>
             <ul class="list-unstyled footer-links">
-              <li class="d-flex align-items-center gap-2"><PhMapPin size="18" /> 12 Nguyễn Văn Bảo, P.4, Q.Gò Vấp</li>
-              <li class="d-flex align-items-center gap-2"><PhPhone size="18" /> 0705 230 644</li>
-              <li class="d-flex align-items-center gap-2"><PhEnvelope size="18" /> support@brevery.vn</li>
+              <li><router-link to="/track">Tra cứu đơn hàng</router-link></li>
+              <li><a href="#">Chính sách đổi trả</a></li>
+              <li><a href="#">Chính sách bảo mật</a></li>
+              <li><a href="#">Điều khoản sử dụng</a></li>
             </ul>
           </div>
+          
           <div class="col-lg-3">
-            <h6 class="text-white mb-3">Giờ mở cửa</h6>
-            <p class="text-white-50 mb-0">T2 - CN: 7:00 - 22:00</p>
+            <h6 class="footer-heading">Thông tin liên hệ</h6>
+            <ul class="list-unstyled footer-links contact-info">
+              <li class="d-flex align-items-start gap-2">
+                <PhMapPin size="20" class="text-primary-light mt-1 flex-shrink-0" weight="fill" />
+                <span>12 Nguyễn Văn Bảo, Phường 4,<br>Q.Gò Vấp, TP.HCM</span>
+              </li>
+              <li class="d-flex align-items-center gap-2">
+                <PhPhone size="20" class="text-primary-light flex-shrink-0" weight="fill" />
+                <span>0705 230 644</span>
+              </li>
+              <li class="d-flex align-items-center gap-2">
+                <PhEnvelope size="20" class="text-primary-light flex-shrink-0" weight="fill" />
+                <span>support@brevery.vn</span>
+              </li>
+            </ul>
           </div>
         </div>
-        <div class="border-top border-secondary pt-3 pb-3 text-center text-white-50" style="font-size:.85rem">
-          © 2026 Brevery. Đồ án tốt nghiệp.
+        
+        <div class="footer-bottom d-flex flex-column flex-md-row justify-content-between align-items-center py-4 border-top">
+          <p class="mb-3 mb-md-0 text-white-50 small">© 2026 Brevery. Đồ án tốt nghiệp.</p>
+          <div class="payment-methods d-flex gap-2">
+            <div class="payment-icon"><PhCreditCard size="24" weight="duotone"/></div>
+            <div class="payment-icon"><PhMoney size="24" weight="duotone"/></div>
+            <div class="payment-icon d-flex align-items-center justify-content-center" style="font-weight:bold; font-size: 0.75rem; letter-spacing: 0.5px;">MOMO</div>
+          </div>
         </div>
       </div>
     </footer>
@@ -220,7 +250,7 @@ import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth.store'
 import { useCartStore } from '@/stores/cart.store'
 import ChatWidget from '@/components/ChatWidget.vue'
-import { PhCake, PhMagnifyingGlass, PhShoppingCart, PhUser, PhPackage, PhGear, PhSignOut, PhMapPin, PhPhone, PhEnvelope, PhX, PhMoon, PhSun } from '@phosphor-icons/vue'
+import { PhCake, PhMagnifyingGlass, PhShoppingCart, PhUser, PhPackage, PhGear, PhSignOut, PhMapPin, PhPhone, PhEnvelope, PhX, PhMoon, PhSun, PhFacebookLogo, PhInstagramLogo, PhTiktokLogo, PhCreditCard, PhMoney } from '@phosphor-icons/vue'
 
 const authStore = useAuthStore()
 const cartStore = useCartStore()
@@ -330,7 +360,6 @@ async function handleLogout() {
   transform: translateY(-8px);
 }
 
-/* BRANDING LOGO */
 .logo-text-gradient {
   font-family: 'Playfair Display', serif;
   font-size: 2rem;
@@ -446,16 +475,71 @@ async function handleLogout() {
   border-radius: 0;
 }
 
-/* FOOTER */
+/* FOOTER UPGRADE */
 .bakery-footer {
-  background: var(--text-main);
+  background: #110A07;
+  color: #FAF2E9;
+  position: relative;
 }
 [data-theme="dark"] .bakery-footer {
-  background: #0F0C0A;
+  background: #0A0604;
 }
-.footer-links li { margin-bottom: 8px; }
-.footer-links a, .footer-links li { color: rgba(255,255,255,.5); font-size: .9rem; transition: color .15s; text-decoration: none; }
-.footer-links a:hover { color: #fff; }
+.footer-heading {
+  color: #FFFFFF;
+  font-weight: 700;
+  font-size: 1.05rem;
+  margin-bottom: 1.5rem;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+}
+.footer-links li { margin-bottom: 12px; }
+.footer-links a, .footer-links span {
+  color: rgba(250, 242, 233, 0.6);
+  font-size: 0.95rem;
+  transition: all 0.2s ease;
+  text-decoration: none;
+}
+.footer-links a:hover {
+  color: var(--primary);
+  padding-left: 5px;
+}
+.contact-info li { line-height: 1.5; }
+.text-primary-light { color: #FFA07A; }
+
+.social-icon-btn {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.05);
+  color: #FAF2E9;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s ease;
+  text-decoration: none;
+}
+.social-icon-btn:hover {
+  background: var(--primary);
+  color: #FFF;
+  transform: translateY(-3px);
+}
+
+.footer-bottom.border-top {
+  border-color: rgba(255,255,255,0.1) !important;
+}
+.payment-icon {
+  width: 45px;
+  height: 30px;
+  background: #FFF;
+  color: #110A07;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0.8;
+  transition: opacity 0.2s;
+}
+.payment-icon:hover { opacity: 1; }
 
 /* CONTACT FLOATING BUTTONS */
 .contact-floating-group {
@@ -575,7 +659,7 @@ async function handleLogout() {
   display: flex;
   flex-direction: column;
   box-shadow: -4px 0 20px rgba(0,0,0,0.15);
-  transition: right 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  transition: right 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }
 .cart-drawer.open {
   right: 0;

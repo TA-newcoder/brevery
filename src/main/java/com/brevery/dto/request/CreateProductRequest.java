@@ -35,6 +35,8 @@ public class CreateProductRequest {
         @NotNull(message = "Giá không được để trống")
         private BigDecimal price;
 
+        private BigDecimal salePrice; // Giá khuyến mãi
+
         private Integer stock = 0;
     }
 }

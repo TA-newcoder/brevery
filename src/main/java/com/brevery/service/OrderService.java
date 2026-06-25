@@ -67,12 +67,13 @@ public class OrderService {
                 ProductVariant variant = item.getVariant();
                 validateAndDeductStock(variant, item.getQuantity());
 
-                BigDecimal sub = variant.getPrice().multiply(BigDecimal.valueOf(item.getQuantity()));
+                BigDecimal effectivePrice = variant.getSalePrice() != null ? variant.getSalePrice() : variant.getPrice();
+                BigDecimal sub = effectivePrice.multiply(BigDecimal.valueOf(item.getQuantity()));
                 OrderDetail detail = OrderDetail.builder()
                         .variant(variant)
                         .productName(variant.getProduct().getName())
                         .variantInfo("Size " + variant.getSize())
-                        .unitPrice(variant.getPrice())
+                        .unitPrice(effectivePrice)
                         .quantity(item.getQuantity())
                         .subTotal(sub)
                         .build();
@@ -96,12 +97,13 @@ public class OrderService {
 
                 validateAndDeductStock(variant, item.getQuantity());
 
-                BigDecimal sub = variant.getPrice().multiply(BigDecimal.valueOf(item.getQuantity()));
+                BigDecimal effectivePrice = variant.getSalePrice() != null ? variant.getSalePrice() : variant.getPrice();
+                BigDecimal sub = effectivePrice.multiply(BigDecimal.valueOf(item.getQuantity()));
                 OrderDetail detail = OrderDetail.builder()
                         .variant(variant)
                         .productName(variant.getProduct().getName())
                         .variantInfo("Size " + variant.getSize())
-                        .unitPrice(variant.getPrice())
+                        .unitPrice(effectivePrice)
                         .quantity(item.getQuantity())
                         .subTotal(sub)
                         .build();
@@ -118,7 +120,13 @@ public class OrderService {
             discountAmount = couponService.validateAndCalculateDiscount(request.getCouponCode(), subTotal, userId);
             appliedCoupon = couponRepository.findByCodeIgnoreCase(request.getCouponCode()).orElse(null);
         }
-        BigDecimal finalAmount = subTotal.subtract(discountAmount);
+        BigDecimal shippingFee = BigDecimal.valueOf(30000); // Phí ship cố định 30K
+        if (appliedCoupon != null && appliedCoupon.getDiscountType() == com.brevery.enums.DiscountType.FREE_SHIP) {
+            // Giảm tối đa bằng phí ship nếu là voucher free ship, phần dư (nếu có) có thể trừ vào tổng (hoặc không)
+            // Ở đây cho trừ vào tổng luôn theo logic CouponService đã tính.
+        }
+
+        BigDecimal finalAmount = subTotal.add(shippingFee).subtract(discountAmount);
         if (finalAmount.compareTo(BigDecimal.ZERO) < 0) {
             finalAmount = BigDecimal.ZERO;
         }
@@ -133,7 +141,7 @@ public class OrderService {
                 .user(user)
                 .subTotal(subTotal)
                 .discountAmount(discountAmount)
-                .shippingFee(BigDecimal.ZERO)
+                .shippingFee(shippingFee)
                 .totalAmount(finalAmount)
                 .status(OrderStatus.PENDING)
                 .paymentMethod(request.getPaymentMethod())

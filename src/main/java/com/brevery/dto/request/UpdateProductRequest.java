@@ -16,4 +16,6 @@ public class UpdateProductRequest {
     private Boolean isAvailable;
 
     private String status;
+
+    private java.util.List<com.brevery.dto.request.CreateProductRequest.VariantRequest> variants;
 }

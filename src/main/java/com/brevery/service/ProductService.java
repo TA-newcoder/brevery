@@ -141,6 +141,7 @@ public class ProductService {
                     .product(savedProduct)
                     .size(varReq.getSize())
                     .price(varReq.getPrice())
+                    .salePrice(varReq.getSalePrice())
                     .stock(varReq.getStock())
                     .isAvailable(varReq.getStock() > 0)
                     .build();
@@ -156,6 +157,7 @@ public class ProductService {
     }
 
     @Transactional
+    @org.springframework.cache.annotation.CacheEvict(value = {"products_detail", "products_list"}, allEntries = true)
     public ProductDetailDTO updateProduct(Long id, UpdateProductRequest request) {
         log.info("Admin updating product ID: {}", id);
 
@@ -175,9 +177,36 @@ public class ProductService {
         }
 
         if (request.getCategoryId() != null) {
-            Category category = categoryRepository.findById(request.getCategoryId())
+            com.brevery.entity.Category category = categoryRepository.findById(request.getCategoryId())
                     .orElseThrow(() -> new AppException(ErrorCode.CATEGORY_NOT_FOUND));
             product.setCategory(category);
+        }
+
+        if (request.getVariants() != null && !request.getVariants().isEmpty()) {
+            java.util.List<ProductVariant> currentVariants = product.getVariants();
+            for (com.brevery.dto.request.CreateProductRequest.VariantRequest varReq : request.getVariants()) {
+                java.util.Optional<ProductVariant> existing = currentVariants.stream()
+                        .filter(v -> v.getSize().equals(varReq.getSize()))
+                        .findFirst();
+                if (existing.isPresent()) {
+                    ProductVariant v = existing.get();
+                    v.setPrice(varReq.getPrice());
+                    v.setSalePrice(varReq.getSalePrice());
+                    v.setStock(varReq.getStock());
+                    v.setIsAvailable(varReq.getStock() > 0);
+                    productVariantRepository.save(v);
+                } else {
+                    ProductVariant newVar = ProductVariant.builder()
+                            .product(product)
+                            .size(varReq.getSize())
+                            .price(varReq.getPrice())
+                            .salePrice(varReq.getSalePrice())
+                            .stock(varReq.getStock())
+                            .isAvailable(varReq.getStock() > 0)
+                            .build();
+                    currentVariants.add(productVariantRepository.save(newVar));
+                }
+            }
         }
 
         Product saved = productRepository.save(product);
@@ -187,6 +216,7 @@ public class ProductService {
     }
 
     @Transactional
+    @org.springframework.cache.annotation.CacheEvict(value = {"products_detail", "products_list"}, allEntries = true)
     public void toggleProductAvailability(Long id) {
         Product product = productRepository.findById(id)
                 .orElseThrow(() -> new AppException(ErrorCode.PRODUCT_NOT_FOUND));
@@ -199,6 +229,7 @@ public class ProductService {
     }
 
     @Transactional
+    @org.springframework.cache.annotation.CacheEvict(value = {"products_detail", "products_list"}, allEntries = true)
     public void updateVariantStock(Long productId, Long variantId, Integer stock) {
         if (stock < 0) {
             throw new AppException(ErrorCode.VALIDATION_ERROR, "Tồn kho không được âm");
@@ -229,6 +260,7 @@ public class ProductService {
     }
 
     @Transactional
+    @org.springframework.cache.annotation.CacheEvict(value = {"products_detail", "products_list"}, allEntries = true)
     public ProductDetailDTO addVariant(Long productId, CreateProductRequest.VariantRequest varReq) {
         Product product = productRepository.findById(productId)
                 .orElseThrow(() -> new AppException(ErrorCode.PRODUCT_NOT_FOUND));
@@ -237,6 +269,7 @@ public class ProductService {
                 .product(product)
                 .size(varReq.getSize())
                 .price(varReq.getPrice())
+                .salePrice(varReq.getSalePrice())
                 .stock(varReq.getStock())
                 .isAvailable(varReq.getStock() > 0)
                 .build();

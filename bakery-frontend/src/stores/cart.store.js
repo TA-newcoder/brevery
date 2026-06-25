@@ -89,13 +89,13 @@ export const useCartStore = defineStore('cart', () => {
 
   // ===== Update Quantity =====
   async function updateQuantity(cartItemId, quantity) {
+    // Optimistic Update
+    const item = items.value.find(i => i.cartItemId === cartItemId || i.variantId === cartItemId)
+    if (item) item.quantity = quantity
+
     const authStore = useAuthStore()
     if (!authStore.isAuthenticated) {
-      const cart = getGuestCart()
-      const item = cart.find(i => i.cartItemId === cartItemId || i.variantId === cartItemId)
-      if (item) item.quantity = quantity
-      saveGuestCart(cart)
-      items.value = cart
+      saveGuestCart(items.value)
       return
     }
     try {
@@ -103,6 +103,7 @@ export const useCartStore = defineStore('cart', () => {
       await fetchCart()
     } catch (err) {
       toast.error(err.response?.data?.message || 'Cập nhật thất bại')
+      await fetchCart() // Revert on failure
     }
   }
 
@@ -119,7 +120,7 @@ export const useCartStore = defineStore('cart', () => {
     try {
       await cartApi.removeCartItem(cartItemId)
       await fetchCart()
-      toast.success('Đã xóa sản phẩm')
+      toast.success('Đã xóa sản phẩm', { autoClose: 1500, hideProgressBar: true })
     } catch (err) {
       toast.error(err.response?.data?.message || 'Xóa thất bại')
     }
@@ -139,8 +140,52 @@ export const useCartStore = defineStore('cart', () => {
     } catch { /* ignore */ }
   }
 
+  // ===== Change Variant =====
+  async function changeVariant(oldItem, newVariant) {
+    // Optimistic Update
+    const index = items.value.findIndex(i => i.cartItemId === oldItem.cartItemId || i.variantId === oldItem.variantId)
+    if (index !== -1) {
+      items.value[index].variantId = newVariant.variantId
+      items.value[index].variantName = newVariant.size
+      items.value[index].price = newVariant.salePrice || newVariant.price
+    }
+
+    const authStore = useAuthStore()
+    if (!authStore.isAuthenticated) {
+      let cart = getGuestCart()
+      cart = cart.filter(i => i.variantId !== oldItem.variantId)
+      const existing = cart.find(i => i.variantId === newVariant.variantId)
+      if (existing) {
+        existing.quantity += oldItem.quantity
+      } else {
+        cart.push({
+          productId: oldItem.productId,
+          variantId: newVariant.variantId,
+          quantity: oldItem.quantity,
+          productName: oldItem.productName,
+          variantName: newVariant.size,
+          price: newVariant.salePrice || newVariant.price,
+          imageUrl: oldItem.imageUrl || oldItem.primaryImageUrl,
+          availableVariants: oldItem.availableVariants
+        })
+      }
+      saveGuestCart(cart)
+      items.value = cart
+      return
+    }
+    
+    try {
+      await cartApi.removeCartItem(oldItem.cartItemId)
+      await cartApi.addToCart({ variantId: newVariant.variantId, quantity: oldItem.quantity })
+      await fetchCart()
+    } catch (err) {
+      toast.error('Lỗi khi đổi phân loại')
+      await fetchCart() // Revert on failure
+    }
+  }
+
   return {
     items, loading, totalItems, totalPrice,
-    fetchCart, addToCart, updateQuantity, removeItem, clearCart,
+    fetchCart, addToCart, updateQuantity, removeItem, clearCart, changeVariant
   }
 })

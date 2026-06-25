@@ -48,18 +48,20 @@
             <PhInfo size="20" class="text-sub" title="Thêm kích thước và giá tương ứng cho sản phẩm" />
           </div>
           <div class="row g-2 mb-2 px-2 text-sub small fw-semibold">
-            <div class="col-4">Kích thước / Loại</div>
+            <div class="col-3">Kích thước / Loại</div>
             <div class="col-3">Giá bán (VNĐ)</div>
-            <div class="col-3">Tồn kho</div>
-            <div class="col-2 text-center">Xóa</div>
+            <div class="col-3">Giá KM (Tùy chọn)</div>
+            <div class="col-2">Tồn kho</div>
+            <div class="col-1 text-center">Xóa</div>
           </div>
           <div v-for="(v, i) in form.variants" :key="i" class="row g-2 mb-2 align-items-center">
-            <div class="col-4"><input v-model="v.size" class="bakery-input" placeholder="Tên (S, M, L)" required /></div>
-            <div class="col-3"><input v-model.number="v.price" type="number" class="bakery-input" placeholder="Giá" required min="0" /></div>
-            <div class="col-3"><input v-model.number="v.stock" type="number" class="bakery-input" placeholder="Tồn kho" min="0" /></div>
-            <div class="col-2 text-center"><button type="button" class="btn btn-sm btn-outline-danger" @click="form.variants.splice(i,1)"><PhTrash size="16" weight="bold" /></button></div>
+            <div class="col-3"><input v-model="v.size" class="bakery-input" placeholder="Tên (S, M, L)" required /></div>
+            <div class="col-3"><input v-model.number="v.price" type="number" class="bakery-input" placeholder="Giá gốc" required min="0" /></div>
+            <div class="col-3"><input v-model.number="v.salePrice" type="number" class="bakery-input" placeholder="Giá khuyến mãi" min="0" /></div>
+            <div class="col-2"><input v-model.number="v.stock" type="number" class="bakery-input" placeholder="Tồn kho" min="0" /></div>
+            <div class="col-1 text-center"><button type="button" class="btn btn-sm btn-outline-danger" @click="form.variants.splice(i,1)"><PhTrash size="16" weight="bold" /></button></div>
           </div>
-          <button type="button" class="btn btn-sm btn-bakery-outline mt-2" @click="form.variants.push({ size: '', price: 0, stock: 0 })">+ Thêm biến thể</button>
+          <button type="button" class="btn btn-sm btn-bakery-outline mt-2" @click="form.variants.push({ size: '', price: 0, salePrice: null, stock: 0 })">+ Thêm biến thể</button>
         </div>
       </div>
       <div class="col-lg-4">
@@ -124,6 +126,9 @@ function onFiles(e) {
 
 async function handleSubmit() {
   submitting.value = true
+  form.variants.forEach(v => {
+    if (!v.salePrice || v.salePrice === '') v.salePrice = null
+  })
   try {
     if (isEdit.value) {
       await adminApi.updateProduct(route.params.id, form)
@@ -166,7 +171,7 @@ onMounted(async () => {
         description: p.description, 
         categoryId: p.categoryId, 
         status: p.status || (p.isAvailable ? 'ACTIVE' : 'PAUSED'),
-        variants: p.variants ? p.variants.map(v => ({ size: v.size, price: v.price, stock: v.stock })) : [] 
+        variants: p.variants ? p.variants.map(v => ({ size: v.size, price: v.price, salePrice: v.salePrice, stock: v.stock })) : [] 
       })
       if (p.images) previewUrls.value = p.images.map(i => i.imageUrl)
     } catch (err) { 

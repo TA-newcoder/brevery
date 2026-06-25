@@ -31,12 +31,26 @@ public interface OrderMapper {
     OrderDetailResponse toDetailResponse(OrderDetail detail);
 
     @Mapping(target = "variantId", source = "variant.variantId")
+    @Mapping(target = "productId", source = "variant.product.productId")
     @Mapping(target = "productName", source = "variant.product.name")
     @Mapping(target = "productSize", source = "variant.size")
-    @Mapping(target = "price", source = "variant.price")
+    @Mapping(target = "price", expression = "java(item.getVariant().getSalePrice() != null ? item.getVariant().getSalePrice() : item.getVariant().getPrice())")
     @Mapping(target = "primaryImageUrl", source = "variant.product.images", qualifiedByName = "getPrimaryImageUrl")
-    @Mapping(target = "subTotal", expression = "java(item.getVariant().getPrice().multiply(java.math.BigDecimal.valueOf(item.getQuantity())))")
+    @Mapping(target = "subTotal", expression = "java((item.getVariant().getSalePrice() != null ? item.getVariant().getSalePrice() : item.getVariant().getPrice()).multiply(java.math.BigDecimal.valueOf(item.getQuantity())))")
+    @Mapping(target = "availableVariants", expression = "java(mapVariants(item.getVariant().getProduct().getVariants()))")
     CartItemResponse toCartItemResponse(CartItem item);
+
+    default java.util.List<com.brevery.dto.response.ProductDetailDTO.VariantDTO> mapVariants(java.util.List<com.brevery.entity.ProductVariant> variants) {
+        if (variants == null) return null;
+        return variants.stream().map(v -> com.brevery.dto.response.ProductDetailDTO.VariantDTO.builder()
+                .variantId(v.getVariantId())
+                .size(v.getSize())
+                .price(v.getPrice())
+                .salePrice(v.getSalePrice())
+                .stock(v.getStock())
+                .isAvailable(v.getIsAvailable())
+                .build()).collect(java.util.stream.Collectors.toList());
+    }
 
     @Named("getFullAddress")
     default String getFullAddress(ShippingDetail shippingDetail) {

@@ -46,7 +46,6 @@ const routes = [
       { path: 'reports', name: 'admin-reports', component: () => import('@/pages/admin/Reports.vue'), meta: { title: 'Báo cáo & Thống kê' } },
       { path: 'reviews', name: 'admin-reviews', component: () => import('@/pages/admin/ReviewList.vue'), meta: { title: 'Quản lý Bình luận' } },
       { path: 'coupons', name: 'admin-coupons', component: () => import('@/pages/admin/CouponList.vue'), meta: { title: 'Quản lý Khuyến mãi' } },
-      { path: 'banners', name: 'admin-banners', component: () => import('@/pages/admin/BannerList.vue'), meta: { title: 'Quản lý Banner' } },
       { path: 'settings', name: 'admin-settings', component: () => import('@/pages/admin/Settings.vue'), meta: { title: 'Cài đặt hệ thống' } },
       { path: 'inventory', name: 'admin-inventory', component: () => import('@/pages/admin/Inventory.vue'), meta: { title: 'Quản lý kho hàng' } },
       { path: 'users', name: 'admin-users', component: () => import('@/pages/admin/UserList.vue'), meta: { title: 'Quản lý người dùng' } },

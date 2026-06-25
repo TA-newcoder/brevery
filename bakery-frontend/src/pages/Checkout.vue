@@ -1,10 +1,11 @@
 <template>
   <div class="container py-4">
-    <button v-if="step === 'checkout' || step === 'confirm'" class="btn btn-sm text-decoration-none text-dark p-0 mb-3 d-flex align-items-center gap-2" @click="goBack">
-      <PhArrowLeft size="18" weight="bold" /> Quay lại
-    </button>
-
-    <h2 class="fw-bold mb-4" v-if="step !== 'success' && step !== 'vnpay'">💳 Thanh toán</h2>
+    <div v-if="step === 'checkout' || step === 'confirm'" class="d-flex align-items-center gap-3 mb-4">
+      <button class="btn btn-bakery-ghost p-2 rounded-circle d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;" @click="goBack">
+        <PhArrowLeft size="24" weight="bold" />
+      </button>
+      <h2 class="fw-bold mb-0 d-flex align-items-center gap-2">💳 Thanh toán</h2>
+    </div>
 
     <!-- BƯỚC 1: ĐIỀN THÔNG TIN (CHECKOUT) -->
     <div v-if="step === 'checkout'" class="row g-4">
@@ -81,7 +82,7 @@
             <label class="pm-option" :class="{active: form.paymentMethod === 'COD'}">
               <input type="radio" v-model="form.paymentMethod" value="COD" class="d-none">
               <div class="d-flex align-items-center gap-3 w-100">
-                <div class="pm-icon bg-light text-success fs-4 rounded-circle d-flex align-items-center justify-content-center" style="width: 48px; height: 48px;">💵</div>
+                <div class="pm-icon bg-secondary-subtle text-success fs-4 rounded-circle d-flex align-items-center justify-content-center" style="width: 48px; height: 48px;">💵</div>
                 <div>
                   <h6 class="mb-0 fw-bold">Thanh toán khi nhận hàng (COD)</h6>
                   <span class="small text-sub">Thanh toán bằng tiền mặt khi shipper giao hàng</span>
@@ -93,7 +94,7 @@
             <label class="pm-option" :class="{active: form.paymentMethod === 'VNPAY'}">
               <input type="radio" v-model="form.paymentMethod" value="VNPAY" class="d-none">
               <div class="d-flex align-items-center gap-3 w-100">
-                <div class="pm-icon bg-light text-primary fs-4 rounded-circle d-flex align-items-center justify-content-center" style="width: 48px; height: 48px;">🏦</div>
+                <div class="pm-icon bg-secondary-subtle text-primary fs-4 rounded-circle d-flex align-items-center justify-content-center" style="width: 48px; height: 48px;">🏦</div>
                 <div>
                   <h6 class="mb-0 fw-bold">Chuyển khoản VNPay</h6>
                   <span class="small text-sub">Quét mã QR để thanh toán nhanh chóng</span>
@@ -107,10 +108,22 @@
 
       <div class="col-lg-5">
         <div class="bakery-card" style="position: sticky; top: 80px">
-          <h5 class="fw-bold mb-3">Đơn hàng ({{ cartStore.totalItems }} SP)</h5>
-          <div v-for="item in cartStore.items" :key="item.variantId" class="d-flex justify-content-between mb-2 small">
-            <span>{{ item.productName }} × {{ item.quantity }}</span>
-            <span class="fw-semibold">{{ formatPrice(item.price * item.quantity) }}</span>
+          <div class="d-flex justify-content-between align-items-center mb-3">
+            <h5 class="fw-bold mb-0">Đơn hàng ({{ cartStore.totalItems }} SP)</h5>
+            <router-link to="/cart" class="btn btn-sm btn-outline-secondary rounded-pill px-3" style="font-size: 0.8rem">Sửa loại / số lượng</router-link>
+          </div>
+          <div class="checkout-items-wrapper mb-3 pe-2" style="max-height: 280px; overflow-y: auto;">
+            <div v-for="item in cartStore.items" :key="item.variantId" class="d-flex gap-3 mb-3 pb-3 border-bottom border-secondary-subtle align-items-center">
+              <img :src="item.imageUrl || item.primaryImageUrl || '/images/cake.png'" class="rounded-3 shadow-sm" style="width: 50px; height: 50px; object-fit: cover;" />
+              <div class="flex-grow-1">
+                <div class="fw-bold small lh-sm mb-1">{{ item.productName }}</div>
+                <div v-if="(item.productSize || item.variantName) && (item.productSize || item.variantName) !== 'Mặc định'" class="text-sub small mb-1" style="font-size: 0.75rem;">
+                  Loại: {{ item.productSize || item.variantName }}
+                </div>
+                <div class="small fw-semibold" style="color: var(--card-dark-accent);">{{ formatPrice(item.price) }} <span class="text-muted fw-normal">× {{ item.quantity }}</span></div>
+              </div>
+              <div class="fw-bold small">{{ formatPrice(item.price * item.quantity) }}</div>
+            </div>
           </div>
           <hr />
           <div class="d-flex justify-content-between mb-2"><span class="text-sub">Tạm tính</span><span>{{ formatPrice(cartStore.totalPrice) }}</span></div>
@@ -121,7 +134,7 @@
               <span v-if="loadingShipping" class="spinner-border spinner-border-sm text-bakery ms-2" role="status"></span>
             </span>
             <span>
-              <span v-if="cartStore.totalPrice >= 200000" class="text-success">Miễn phí</span>
+              <span v-if="cartStore.totalPrice >= 500000" class="text-success">Miễn phí</span>
               <span v-else-if="shippingFee > 0">{{ formatPrice(shippingFee) }}</span>
               <span v-else-if="outOfRange" class="text-warning small text-end" style="max-width: 150px">Liên hệ báo phí</span>
               <span v-else>---</span>
@@ -132,6 +145,20 @@
             <PhWarningCircle weight="fill" /> Khu vực ngoại thành (>20km). Vui lòng liên hệ Zalo Shop để được báo giá ship. Bạn vẫn có thể đặt hàng.
           </div>
           <div v-if="distance > 0 && !outOfRange" class="small text-sub text-end mb-2">Khoảng cách: ~{{ distance.toFixed(1) }} km</div>
+
+          <div v-if="cartStore.totalPrice >= 500000" class="alert alert-success small py-2 mt-3 mb-2 border-0 bg-success bg-opacity-10 text-success d-flex align-items-center gap-2">
+            <PhSparkle weight="fill" /> Tặng bạn mã <strong>FREESHIP</strong> cho đơn hàng trên 500k!
+          </div>
+          <div v-else class="alert alert-info small py-2 mt-3 mb-2 border-0 bg-info bg-opacity-10 text-info">
+            Mua thêm {{ formatPrice(500000 - cartStore.totalPrice) }} nữa để nhận mã <strong>FREESHIP</strong>!
+          </div>
+
+          <div class="input-group mb-3 mt-2 input-group-sm">
+            <input type="text" class="form-control bakery-input" v-model="form.couponCode" placeholder="Nhập mã khuyến mãi (nếu có)" @keyup.enter="applyCoupon" />
+            <button class="btn btn-bakery fw-semibold" @click="applyCoupon" :disabled="loadingCoupon">
+              {{ loadingCoupon ? '...' : 'Áp dụng' }}
+            </button>
+          </div>
 
           <div v-if="discount > 0" class="d-flex justify-content-between mb-2 text-success"><span>Giảm giá</span><span>-{{ formatPrice(discount) }}</span></div>
           <hr />
@@ -264,13 +291,13 @@
 </template>
 
 <script setup>
-import { reactive, ref, computed, onMounted, onUnmounted } from 'vue'
+import { ref, reactive, computed, watch, onMounted, onUnmounted } from 'vue'
+import { watchDebounced } from '@vueuse/core'
 import { useRouter } from 'vue-router'
 import { useCartStore } from '@/stores/cart.store'
 import { orderApi } from '@/api/order.api'
 import { toast } from 'vue3-toastify'
-import { watchDebounced } from '@vueuse/core'
-import { PhArrowLeft, PhCheckCircle, PhWarningCircle, PhCircleNotch } from '@phosphor-icons/vue'
+import { PhArrowLeft, PhCheckCircle, PhWarningCircle, PhCircleNotch, PhSparkle } from '@phosphor-icons/vue'
 
 const cartStore = useCartStore()
 const router = useRouter()
@@ -291,6 +318,8 @@ const qrUrl = ref('')
 const timer = ref(240)
 let timerInterval = null
 
+const loadingCoupon = ref(false)
+
 const form = reactive({
   recipientName: '', recipientPhone: '', guestEmail: '', address: '', building: '', ward: '', district: '', city: 'TP. Hồ Chí Minh',
   paymentMethod: 'COD', couponCode: '', note: '', deliveryTime: 'Càng sớm càng tốt'
@@ -298,7 +327,7 @@ const form = reactive({
 const errors = reactive({ recipientName: false, recipientPhone: false, address: false, district: false, ward: false })
 
 const total = computed(() => {
-  let ship = cartStore.totalPrice >= 200000 ? 0 : (outOfRange.value ? 0 : shippingFee.value)
+  let ship = cartStore.totalPrice >= 500000 ? 0 : (outOfRange.value ? 0 : shippingFee.value)
   return cartStore.totalPrice + ship - discount.value
 })
 
@@ -312,6 +341,21 @@ function formatTimer(s) {
 function goBack() {
   if (step.value === 'confirm') step.value = 'checkout'
   else router.back()
+}
+
+async function applyCoupon() {
+  if (!form.couponCode.trim()) return
+  loadingCoupon.value = true
+  try {
+    const { data } = await orderApi.validateCoupon(form.couponCode.trim(), cartStore.totalPrice)
+    discount.value = data.data || 0
+    toast.success('Áp dụng mã thành công!')
+  } catch (err) {
+    discount.value = 0
+    toast.error(err.response?.data?.message || 'Mã không hợp lệ hoặc đã hết hạn')
+  } finally {
+    loadingCoupon.value = false
+  }
 }
 
 // Fetch Provinces
@@ -473,7 +517,7 @@ onUnmounted(() => {
   border-radius: var(--radius-card);
   padding: 16px;
   cursor: pointer;
-  background: white;
+  background: var(--bg-card);
   box-shadow: 0 2px 12px rgba(0,0,0,0.03);
   transition: all 0.2s ease;
 }
@@ -482,7 +526,7 @@ onUnmounted(() => {
 }
 .pm-option.active {
   border-color: var(--bakery-primary);
-  background: var(--bakery-primary-light);
+  background: rgba(212, 135, 90, 0.05);
 }
 
 .spinner {
@@ -490,4 +534,12 @@ onUnmounted(() => {
   display: inline-block;
 }
 @keyframes spin { 100% { transform: rotate(360deg); } }
+
+.checkout-items-wrapper::-webkit-scrollbar {
+  width: 4px;
+}
+.checkout-items-wrapper::-webkit-scrollbar-thumb {
+  background-color: var(--border-color);
+  border-radius: 4px;
+}
 </style>

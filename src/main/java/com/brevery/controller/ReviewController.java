@@ -24,6 +24,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
+import com.brevery.service.ProductService;
 
 @RestController
 @RequestMapping("/api/v1/reviews")
@@ -36,6 +37,7 @@ public class ReviewController {
     private final OrderRepository orderRepository;
     private final UserRepository userRepository;
     private final ProductMapper productMapper;
+    private final ProductService productService;
 
     @PostMapping
     @Operation(summary = "Tạo đánh giá cho sản phẩm (yêu cầu đã mua và đã nhận hàng)")
@@ -53,7 +55,7 @@ public class ReviewController {
         // Find a delivered order containing this product by this user
         Order order = orderRepository
                 .findFirstByUserUserIdAndStatusAndOrderDetails_Product_ProductId(
-                        userId, OrderStatus.DELIVERED, request.getProductId())
+                        userId, OrderStatus.COMPLETED, request.getProductId())
                 .orElseThrow(() -> new AppException(ErrorCode.ORDER_NOT_DELIVERED));
 
         // Check if already reviewed this product in this order
@@ -71,6 +73,9 @@ public class ReviewController {
                 .status("APPROVED")
                 .build();
         reviewRepository.save(review);
+        
+        // Clear product cache so the rating and review count updates
+        productService.evictProductCache(product.getProductId());
 
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(ApiResponse.created(productMapper.toReviewDTO(review), "Đánh giá thành công"));

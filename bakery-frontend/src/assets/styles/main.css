@@ -466,7 +466,7 @@ a {
   text-align: left;
   border: none;
   background: transparent;
-  padding: 18px 22px;
+  padding: 20px 24px;
   font-weight: 700;
   color: var(--text-main);
   cursor: pointer;
@@ -475,18 +475,25 @@ a {
   justify-content: space-between;
   gap: 16px;
 }
-.faq-chevron { transition: transform .25s ease; flex-shrink: 0; color: var(--primary); }
+.faq-chevron { transition: transform .3s var(--ease-smooth); flex-shrink: 0; color: var(--primary); }
 .faq-item.open .faq-chevron { transform: rotate(180deg); }
 .faq-answer {
   display: grid;
   grid-template-rows: 0fr;
-  transition: grid-template-rows .3s ease, padding .3s ease;
-  padding: 0 22px;
+  transition: grid-template-rows .35s var(--ease-smooth);
+}
+.faq-inner {
+  overflow: hidden;
+  padding: 0 24px;
   color: var(--text-sub);
   line-height: 1.65;
 }
-.faq-answer > div { overflow: hidden; }
-.faq-item.open .faq-answer { grid-template-rows: 1fr; padding: 0 22px 20px; }
+.faq-inner p {
+  padding-bottom: 20px;
+  margin-top: -4px;
+  margin-bottom: 0;
+}
+.faq-item.open .faq-answer { grid-template-rows: 1fr; }
 
 /* Wishlist heart pop animation */
 @keyframes heart-pop {
@@ -553,9 +560,9 @@ a {
 }
 
 /* ==================== DARK MODE OVERRIDES ==================== */
-[data-theme="dark"] .table { color: var(--text-main); }
-[data-theme="dark"] .table thead th { color: var(--text-sub); border-color: var(--border-color); }
-[data-theme="dark"] .table tbody td { border-color: var(--border-light); }
+[data-theme="dark"] .table { color: var(--text-main); --bs-table-bg: transparent; --bs-table-color: var(--text-main); }
+[data-theme="dark"] .table thead th { color: var(--text-sub); border-color: var(--border-color); background-color: transparent; }
+[data-theme="dark"] .table tbody td { border-color: var(--border-light); background-color: transparent; }
 [data-theme="dark"] .table-hover tbody tr:hover { background-color: var(--bg-muted); }
 [data-theme="dark"] .bg-white { background-color: var(--bg-surface) !important; }
 [data-theme="dark"] .bg-light { background-color: var(--bg-muted) !important; }

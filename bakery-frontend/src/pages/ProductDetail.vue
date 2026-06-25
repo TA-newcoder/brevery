@@ -7,7 +7,12 @@
     <div v-else-if="product" class="row g-4">
       <!-- Images -->
       <div class="col-md-6">
-        <div class="bakery-card p-0 overflow-hidden">
+        <div class="bakery-card p-0 overflow-hidden position-relative">
+          <div v-if="selectedVariant?.salePrice" class="position-absolute start-50 translate-middle-x z-3" style="top: 10px;">
+            <div class="badge rounded-pill shadow-lg d-inline-flex align-items-center gap-1 text-white sale-pulse-heavy px-3 py-2 fs-6 border border-light" style="background: linear-gradient(135deg, #FF416C, #FF4B2B);">
+              <PhFire size="16" weight="fill" color="#fff" /> GIÁ SỐC
+            </div>
+          </div>
           <img :src="mainImage" :alt="product.name" class="w-100" style="height: 400px; object-fit: cover" />
           <div class="d-flex gap-2 p-3" v-if="product.images?.length > 1">
             <img v-for="img in product.images" :key="img.imageId" :src="img.imageUrl" @click="mainImage = img.imageUrl"
@@ -38,16 +43,20 @@
               :class="['btn btn-sm', selectedVariant?.variantId === v.variantId ? 'btn-bakery' : 'btn-bakery-outline']"
               :disabled="v.stock <= 0"
               @click="selectedVariant = v">
-              {{ v.variantName }} — {{ formatPrice(v.price) }}
+              {{ v.size }}
               <span v-if="v.stock <= 0" class="ms-1">(Hết)</span>
             </button>
           </div>
         </div>
 
         <!-- Price -->
-        <div class="mb-4">
-          <span class="fs-3 fw-bold text-bakery">{{ formatPrice(selectedVariant?.price || product.minPrice) }}</span>
-          <span v-if="selectedVariant" class="text-sub small ms-2">Còn {{ selectedVariant.stock }} sản phẩm</span>
+        <div class="mb-4 d-flex align-items-center gap-3">
+          <div v-if="selectedVariant?.salePrice">
+            <span class="fs-3 fw-bold text-bakery">{{ formatPrice(selectedVariant.salePrice) }}</span>
+            <span class="fs-5 text-decoration-line-through text-muted ms-2">{{ formatPrice(selectedVariant.price) }}</span>
+          </div>
+          <span v-else class="fs-3 fw-bold text-bakery">{{ formatPrice(selectedVariant?.price || product.minPrice) }}</span>
+          <span v-if="selectedVariant" class="text-sub small">Còn {{ selectedVariant.stock }} sản phẩm</span>
         </div>
 
         <!-- Quantity + Add -->
@@ -106,7 +115,7 @@
       <div v-for="r in reviews" :key="r.reviewId" class="bakery-card mb-3">
         <div class="d-flex justify-content-between">
           <div>
-            <span class="fw-semibold">{{ r.userName }}</span>
+            <span class="fw-semibold">{{ r.userName || 'Khách hàng' }}</span>
             <span class="ms-2 d-inline-flex gap-1">
               <PhStar v-for="i in r.rating" :key="i" weight="fill" color="#f5a623" size="14" />
             </span>
@@ -179,12 +188,14 @@ async function fetchReviews() {
 function handleAddToCart() {
   if (!selectedVariant.value) return
   cartStore.addToCart({
+    productId: product.value.productId,
     variantId: selectedVariant.value.variantId,
     quantity: qty.value,
     productName: product.value.name,
-    variantName: selectedVariant.value.variantName,
-    price: selectedVariant.value.price,
+    variantName: selectedVariant.value.size,
+    price: selectedVariant.value.salePrice || selectedVariant.value.price,
     imageUrl: mainImage.value,
+    availableVariants: product.value.variants
   })
 }
 
@@ -199,6 +210,7 @@ async function submitReview() {
     })
     reviewSent.value = true
     toast.success('Đánh giá thành công!')
+    reviewPage.value = 0 // Reset to first page to see new review
     await fetchReviews()
     await fetchProduct()
   } catch (e) {
@@ -214,4 +226,12 @@ watch(() => route.params.id, () => { fetchProduct(); fetchReviews(); reviewSent.
 <style scoped>
 .thumb { border: 2px solid transparent; transition: border-color .15s; }
 .thumb.active { border-color: var(--bakery-primary); }
+@keyframes sale-pulse-heavy {
+  0% { transform: translateX(-50%) scale(1); box-shadow: 0 0 0 0 rgba(255, 65, 108, 0.8); }
+  50% { transform: translateX(-50%) scale(1.1); box-shadow: 0 0 0 10px rgba(255, 65, 108, 0); }
+  100% { transform: translateX(-50%) scale(1); box-shadow: 0 0 0 0 rgba(255, 65, 108, 0); }
+}
+.sale-pulse-heavy {
+  animation: sale-pulse-heavy 1.5s infinite;
+}
 </style>

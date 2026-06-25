@@ -1,7 +1,6 @@
 <template>
   <div>
-    <div class="d-flex justify-content-between align-items-center mb-4">
-      <h4 class="fw-bold mb-0">Quản lý khuyến mãi</h4>
+    <div class="d-flex justify-content-end align-items-center mb-4">
       <button class="btn btn-bakery btn-sm d-flex align-items-center gap-1" @click="openModal()">
         <PhPlus weight="bold" size="18" /> Thêm coupon
       </button>
@@ -22,15 +21,17 @@
               <td class="small" :class="isExpired(c) ? 'text-danger' : ''">{{ formatDate(c.expiryDate) }}</td>
               <td>{{ c.usedCount }}/{{ c.usageLimit || '∞' }}</td>
               <td>
-                <span :class="c.isActive ? 'badge bg-success' : 'badge bg-secondary'">{{ c.isActive ? 'Hoạt động' : 'Tắt' }}</span>
+                <span :class="c.isActive !== false ? 'badge-green' : 'badge bg-secondary'" style="font-size:0.8rem">{{ c.isActive !== false ? 'Hoạt động' : 'Ẩn' }}</span>
               </td>
               <td>
                 <div class="d-flex gap-1">
-                  <button class="btn btn-sm btn-bakery-outline" @click="openModal(c)">✏️</button>
-                  <button class="btn btn-sm btn-outline-secondary" @click="toggleCoupon(c)">
-                    {{ c.isActive ? '🙈' : '👁️' }}
+                  <button class="btn btn-sm btn-bakery-outline" @click="openModal(c)" title="Sửa" style="padding:6px 10px"><PhPencilSimple size="18" /></button>
+                  <button class="btn btn-sm btn-bakery-outline" @click="toggleCoupon(c)" title="Ẩn/Hiện" style="padding:6px 10px">
+                    <component :is="c.isActive !== false ? PhEye : PhEyeClosed" size="18" />
                   </button>
-                  <button class="btn btn-sm btn-outline-danger" @click="deleteCoupon(c)">🗑️</button>
+                  <button class="btn btn-sm" style="padding:6px 10px;background:var(--color-danger-light);color:var(--color-danger);border:1px solid var(--color-danger);border-radius:var(--radius-sm)" @click="deleteCoupon(c)" title="Xóa">
+                    <PhTrash size="18" />
+                  </button>
                 </div>
               </td>
             </tr>
@@ -93,7 +94,7 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import { adminApi } from '@/api/admin.api'
-import { PhPlus } from '@phosphor-icons/vue'
+import { PhPlus, PhPencilSimple, PhEye, PhEyeClosed, PhTrash } from '@phosphor-icons/vue'
 import { toast } from 'vue3-toastify'
 import dayjs from 'dayjs'
 

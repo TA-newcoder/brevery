@@ -23,12 +23,14 @@ public class ProductDetailDTO implements Serializable {
     private Long categoryId;
     private BigDecimal minPrice;
     private BigDecimal maxPrice;
+    private BigDecimal minSalePrice;
     private Integer totalSold;
     private Double avgRating;
     private Long reviewCount;
     private Boolean isAvailable;
     private String status;
     private LocalDateTime createdAt;
+    private Integer totalStock;
 
     private List<VariantDTO> variants;
     private List<ImageDTO> images;
@@ -41,6 +43,7 @@ public class ProductDetailDTO implements Serializable {
         private Long variantId;
         private String size;
         private BigDecimal price;
+        private BigDecimal salePrice;
         private Integer stock;
         private Boolean isAvailable;
     }

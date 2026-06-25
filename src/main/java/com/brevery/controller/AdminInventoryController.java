@@ -33,7 +33,6 @@ public class AdminInventoryController {
 
     private final InventoryService inventoryService;
     private final ProductVariantRepository variantRepository;
-    private final ProductMapper productMapper;
 
     @GetMapping("/low-stock")
     @Operation(summary = "Lấy danh sách các sản phẩm (theo biến thể) sắp hết hàng")
@@ -56,14 +55,27 @@ public class AdminInventoryController {
         return ResponseEntity.ok(ApiResponse.success(lowStockItems));
     }
 
+    @GetMapping("/products")
+    @Operation(summary = "Lấy danh sách sản phẩm (kèm biến thể) cho Quản lý Tồn Kho")
+    public ResponseEntity<ApiResponse<Page<ProductDetailDTO>>> getInventoryProducts(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "100") int size) {
+        
+        PageRequest pageRequest = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createdAt"));
+        return ResponseEntity.ok(ApiResponse.success(inventoryService.getInventoryProducts(pageRequest)));
+    }
+
     @GetMapping("/receipts")
     @Operation(summary = "Lấy danh sách phiếu nhập kho")
     public ResponseEntity<ApiResponse<Page<InventoryReceiptDTO>>> getReceipts(
+            @RequestParam(required = false) Long productId,
+            @RequestParam(required = false) @org.springframework.format.annotation.DateTimeFormat(iso = org.springframework.format.annotation.DateTimeFormat.ISO.DATE) java.time.LocalDate startDate,
+            @RequestParam(required = false) @org.springframework.format.annotation.DateTimeFormat(iso = org.springframework.format.annotation.DateTimeFormat.ISO.DATE) java.time.LocalDate endDate,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size) {
         
         PageRequest pageRequest = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createdAt"));
-        return ResponseEntity.ok(ApiResponse.success(inventoryService.getReceipts(pageRequest)));
+        return ResponseEntity.ok(ApiResponse.success(inventoryService.getReceipts(productId, startDate, endDate, pageRequest)));
     }
 
     @PostMapping("/receipts")
@@ -73,5 +85,14 @@ public class AdminInventoryController {
         InventoryReceiptDTO receipt = inventoryService.createReceipt(request);
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(ApiResponse.created(receipt, "Tạo phiếu nhập kho thành công"));
+    }
+
+    @PutMapping("/variants/{variantId}/stock")
+    @Operation(summary = "Cập nhật trực tiếp số lượng tồn kho của biến thể")
+    public ResponseEntity<ApiResponse<Void>> updateStock(
+            @PathVariable Long variantId,
+            @RequestParam Integer stock) {
+        inventoryService.updateStock(variantId, stock);
+        return ResponseEntity.ok(ApiResponse.success(null, "Cập nhật số lượng thành công"));
     }
 }

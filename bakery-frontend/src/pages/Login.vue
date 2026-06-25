@@ -13,7 +13,7 @@
         </p>
         <ul class="list-unstyled d-flex flex-column gap-3 brand-features">
           <li class="d-flex align-items-center gap-3"><PhMoped size="22" weight="duotone" /> Giao hàng trong 30 phút</li>
-          <li class="d-flex align-items-center gap-3"><PhLeaf size="22" weight="duotone" /> Nguyên liệu tươi mỗi sáng</li>
+          <li class="d-flex align-items-center gap-3"><PhPackage size="22" weight="duotone" /> Đóng gói tiện lợi, an toàn</li>
           <li class="d-flex align-items-center gap-3"><PhShieldCheck size="22" weight="duotone" /> Hoàn tiền 100% nếu chưa hài lòng</li>
         </ul>
       </div>
@@ -79,7 +79,7 @@ import { reactive, ref } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useAuthStore } from '@/stores/auth.store'
 import { useCartStore } from '@/stores/cart.store'
-import { PhEnvelope, PhLock, PhEye, PhEyeSlash, PhMoped, PhLeaf, PhShieldCheck, PhArrowLeft } from '@phosphor-icons/vue'
+import { PhEnvelope, PhLock, PhEye, PhEyeSlash, PhMoped, PhPackage, PhShieldCheck, PhArrowLeft } from '@phosphor-icons/vue'
 
 const authStore = useAuthStore()
 const cartStore = useCartStore()

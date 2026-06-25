@@ -48,8 +48,8 @@ public class SecurityConfig {
                     // PUBLIC — Contact form
                     .requestMatchers(HttpMethod.POST, "/api/v1/contact").permitAll()
 
-                    // PUBLIC — Banners
-                    .requestMatchers("/api/v1/banners/**").permitAll()
+                    // PUBLIC — Files
+                    .requestMatchers("/api/v1/files/**").permitAll()
 
                     // PUBLIC — Swagger & H2
                     .requestMatchers(

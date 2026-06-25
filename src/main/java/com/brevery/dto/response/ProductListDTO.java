@@ -19,9 +19,13 @@ public class ProductListDTO implements Serializable {
     private String primaryImageUrl;
     private BigDecimal minPrice;
     private BigDecimal maxPrice;
+    private BigDecimal minSalePrice;
     private Integer totalSold;
     private Double avgRating;
     private Long reviewCount;
     private String categoryName;
     private String status;
+    private Long defaultVariantId;
+    private Boolean hasMultipleVariants;
+    private Integer totalStock;
 }

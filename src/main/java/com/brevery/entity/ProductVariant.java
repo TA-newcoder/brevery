@@ -31,6 +31,9 @@ public class ProductVariant {
     @Column(nullable = false, precision = 12, scale = 0)
     private BigDecimal price;
 
+    @Column(precision = 12, scale = 0)
+    private BigDecimal salePrice; // Giá khuyến mãi
+
     @Column(nullable = false)
     @Builder.Default
     private Integer stock = 0;

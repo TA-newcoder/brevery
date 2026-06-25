@@ -20,6 +20,7 @@ app.use(router)
 app.use(Vue3Toastify, {
   autoClose: 2000,
   position: 'top-right',
-  theme: 'light',
+  theme: 'colored',
+  transition: 'slide',
 })
 app.mount('#app')
