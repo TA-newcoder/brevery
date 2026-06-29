@@ -59,8 +59,8 @@ spring:
   datasource:
     url: jdbc:sqlserver://localhost:1433;databaseName=brevery;encrypt=true;trustServerCertificate=true;sendStringParametersAsUnicode=true;
     driver-class-name: com.microsoft.sqlserver.jdbc.SQLServerDriver
-    username: sa
-    password: 123
+    username: ${DB_USERNAME:sa}
+    password: ${DB_PASSWORD:123}
 
   jpa:
     database-platform: org.hibernate.dialect.SQLServer2012Dialect

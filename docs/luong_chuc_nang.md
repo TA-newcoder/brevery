@@ -84,17 +84,31 @@ Tài liệu này giúp bạn hình dung rõ ràng luồng đi của dữ liệu 
 
 ---
 
-## 6. Chức năng Thống kê Doanh thu (Admin Analytics)
-*Luồng cho trang Dashboard của Quản trị viên.*
+## 6. Chức năng Dashboard & Báo Cáo (Admin Analytics & AI Insights)
+*Luồng khi Admin xem trang Dashboard (Bảng điều khiển) và Reports (Báo cáo).*
 
 **Luồng đi (Flow):**
-`Admin Client` ➔ `AdminAnalyticsController` ➔ `AnalyticsService` ➔ `OrderRepository` ➔ `AnalyticsDTO` ➔ `Admin Client`
+`Admin Client (Vue.js)` ➔ `AdminAnalyticsController` ➔ `AnalyticsService` ➔ `OrderRepository` / `ProductRepository` ➔ `LLM API (Gemini/OpenAI)` ➔ `Admin Client`
 
 **Chi tiết nhiệm vụ từng Class trên luồng:**
-1. **`AdminAnalyticsController`:** Gọi API lấy thống kê theo tháng/năm.
-2. **`AnalyticsService`:** Xử lý logic tính toán tổng doanh thu, đếm số đơn hàng trạng thái COMPLETED.
-3. **`OrderRepository`:** Thực thi các câu lệnh SQL gom nhóm (GROUP BY) theo ngày/tháng để lấy số liệu tổng kết.
-4. Xây dựng đối tượng **DTO Thống kê** trả về dạng mảng/dữ liệu vẽ biểu đồ.
+1. **`AdminAnalyticsController`:** Nhận các API lấy thống kê (KPI, biểu đồ doanh thu, biểu đồ trạng thái đơn hàng) và API yêu cầu AI sinh báo cáo.
+2. **`AnalyticsService`:** Xử lý logic nghiệp vụ. Gọi các Repository để lấy số liệu thô. Nếu có yêu cầu AI, Service sẽ đóng gói dữ liệu thành Prompt và gửi qua API của LLM (Spring AI).
+3. **`OrderRepository` / `ProductRepository`:** Thực thi các câu lệnh SQL gom nhóm (`GROUP BY`), tính tổng (`SUM`), và đếm (`COUNT`) để lấy số liệu tổng kết.
+4. **Kết quả trả về:** Dữ liệu chuẩn JSON (như mảng labels và data) để Frontend dùng thư viện **Chart.js** vẽ biểu đồ, hoặc văn bản Markdown từ AI để hiển thị báo cáo.
+
+---
+
+## 7. Chức năng Khuyến mãi (Coupons)
+*Luồng khi Admin quản lý mã giảm giá và Khách hàng áp dụng mã khi thanh toán.*
+
+**Luồng đi (Flow):**
+`Admin Client` ➔ `AdminCouponController` ➔ `CouponRepository` ➔ `Admin Client`
+*(Khi thanh toán)* `Khách hàng` ➔ `OrderService` ➔ `CouponRepository` ➔ `OrderRepository`
+
+**Chi tiết nhiệm vụ từng Class trên luồng:**
+1. **`AdminCouponController`:** Tiếp nhận các API thao tác CRUD (Thêm, Sửa, Xóa, Ẩn/Hiện mã) từ Admin. Validate dữ liệu đầu vào.
+2. **`CouponRepository`:** Thực thi SQL để kiểm tra mã bị trùng (`findByCodeIgnoreCase`) hoặc lưu/cập nhật thông tin mã xuống DB.
+3. **`OrderService` (Trong luồng Checkout):** Khi khách đặt hàng, Service sẽ lấy mã giảm giá khách nhập, kiểm tra các điều kiện (còn hạn không, đủ đơn tối thiểu không, số lượng dùng đã hết chưa). Nếu hợp lệ, trừ tiền và tăng `usedCount` lên 1.
 
 ---
 
