@@ -31,6 +31,10 @@ const routes = [
     path: '/forgot-password', name: 'forgot-password', component: () => import('@/pages/ForgotPassword.vue'),
     meta: { title: 'Quên mật khẩu', hideIfAuth: true },
   },
+  {
+    path: '/reset-password', name: 'reset-password', component: () => import('@/pages/ResetPassword.vue'),
+    meta: { title: 'Đặt lại mật khẩu', hideIfAuth: true },
+  },
   // ===== ADMIN PAGES =====
   {
     path: '/admin',

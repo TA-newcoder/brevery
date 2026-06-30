@@ -16,6 +16,8 @@ public interface UserRepository extends JpaRepository<User, Long>, JpaSpecificat
     Optional<User> findByEmail(String email);
 
     boolean existsByEmail(String email);
+    boolean existsByPhone(String phone);
+    boolean existsByFullName(String fullName);
 
     @Query("SELECT COUNT(u) FROM User u WHERE u.createdAt >= :startDate")
     Long countNewUsersSince(@Param("startDate") LocalDateTime startDate);

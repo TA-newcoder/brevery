@@ -10,6 +10,8 @@ public enum ErrorCode {
 
     // === Auth ===
     EMAIL_ALREADY_EXISTS(HttpStatus.CONFLICT, "AUTH_001", "Email đã được sử dụng"),
+    PHONE_ALREADY_EXISTS(HttpStatus.CONFLICT, "AUTH_013", "Số điện thoại đã được sử dụng"),
+    NAME_ALREADY_EXISTS(HttpStatus.CONFLICT, "AUTH_014", "Họ tên này đã được sử dụng"),
     INVALID_CREDENTIALS(HttpStatus.UNAUTHORIZED, "AUTH_002", "Email hoặc mật khẩu không đúng"),
     ACCOUNT_LOCKED(HttpStatus.FORBIDDEN, "AUTH_003", "Tài khoản đã bị khóa"),
     ACCOUNT_NOT_VERIFIED(HttpStatus.FORBIDDEN, "AUTH_004", "Tài khoản chưa xác thực email"),

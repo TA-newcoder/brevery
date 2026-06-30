@@ -54,6 +54,16 @@ public class AuthService {
         if (userRepository.existsByEmail(request.getEmail())) {
             throw new AppException(ErrorCode.EMAIL_ALREADY_EXISTS);
         }
+        
+        // Kiểm tra số điện thoại trùng
+        if (userRepository.existsByPhone(request.getPhone())) {
+            throw new AppException(ErrorCode.PHONE_ALREADY_EXISTS);
+        }
+        
+        // Kiểm tra họ tên trùng
+        if (userRepository.existsByFullName(request.getFullName())) {
+            throw new AppException(ErrorCode.NAME_ALREADY_EXISTS);
+        }
 
         // Tạo user
         User user = User.builder()
